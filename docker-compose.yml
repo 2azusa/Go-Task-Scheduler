@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  # 您的 Go 应用程序服务
+  app:
+    build: .
+    container_name: crony-app
+    ports:
+      - "8089:8089"
+    environment:
+      # 通过环境变量传递配置
+      # 您需要修改您的 Go 代码以读取这些环境变量
+      MYSQL_PATH: "db:3306"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "root"
+      MYSQL_DB_NAME: "crony"
+      ETCD_ENDPOINTS: "http://etcd:2379"
+      # 其他在 config.json 中的配置也可以作为环境变量添加进来
+    depends_on:
+      - db
+      - etcd
+    networks:
+      - crony-net
+
+  # MySQL 数据库服务
+  db:
+    image: mysql:8.0
+    container_name: crony-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "root"
+      MYSQL_DATABASE: "crony"
+    ports:
+      # 可选：将数据库端口暴露给主机，以便直接访问
+      - "3307:3306"
+    volumes:
+      - db-data:/var/lib/mysql
+    networks:
+      - crony-net
+
+  # etcd 服务
+  etcd:
+    image: bitnami/etcd:latest
+    container_name: crony-etcd
+    restart: always
+    environment:
+      ALLOW_NONE_AUTHENTICATION: "yes"
+      ETCD_ADVERTISE_CLIENT_URLS: "http://etcd:2379"
+    ports:
+      - "2379:2379"
+    networks:
+      - crony-net
+
+# 定义网络
+networks:
+  crony-net:
+    driver: bridge
+
+# 定义数据卷以持久化数据
+volumes:
+  db-data:

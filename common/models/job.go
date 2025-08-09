@@ -69,6 +69,14 @@ func (j *Job) InitNodeInfo(status int, nodeUUID, hostname, ip string) {
 	j.Ip = ip
 }
 
+func (j *Job) Insert() (insertId int, err error) {
+	err = dbclient.GetMysqlDB().Table(CronyJobTableName).Create(j).Error
+	if err == nil {
+		insertId = j.ID
+	}
+	return
+}
+
 // 更新任务
 func (j *Job) Update() error {
 	return dbclient.GetMysqlDB().Table(CronyJobTableName).Updates(j).Error
