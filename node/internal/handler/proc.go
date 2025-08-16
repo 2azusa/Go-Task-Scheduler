@@ -1,17 +1,17 @@
 package handler
 
 import (
-	"crony/common/models"
-	"crony/common/pkg/config"
-	"crony/common/pkg/etcdclient"
-	"crony/common/pkg/logger"
 	"encoding/json"
 	"fmt"
+	"pulse/common/models"
+	"pulse/common/pkg/config"
+	"pulse/common/pkg/etcdclient"
+	"pulse/common/pkg/logger"
 	"strconv"
 	"strings"
 	"sync/atomic"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // JobProc 结构体代表一个正在执行的任务的信息
@@ -22,7 +22,7 @@ type JobProc struct {
 // GetProcFromKey 函数从一个etcd的key字符串中解析出JobProc的信息
 func GetProcFromKey(key string) (proc *JobProc, err error) {
 	// 通过”/“分割etcd key字符串
-	// 预期的 key 格式应为： /crony/proc/{nodeUUID}/{jobId}/{procId}
+	// 预期的 key 格式应为： /pulse/proc/{nodeUUID}/{jobId}/{procId}
 	ss := strings.Split(key, "/")
 	var sslen = len(ss)
 	if sslen < 5 { // 根据与其的key格式，分割后的长度至少为5

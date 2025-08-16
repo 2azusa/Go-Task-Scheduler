@@ -11,7 +11,7 @@ var feiShuTemplateCard = `{
     "header": {
       "title": {
         "tag": "plain_text",
-        "content": "subjectSlot - Crony定时任务平台报警" 
+        "content": "subjectSlot - Pulse定时任务平台报警" 
       },
       "template": "red" 
     },

@@ -1,15 +1,15 @@
 package handler
 
 import (
-	"crony/admin/internal/model/request"
-	"crony/admin/internal/model/resp"
-	"crony/admin/internal/service"
-	"crony/common/models"
-	"crony/common/pkg/etcdclient"
-	"crony/common/pkg/logger"
 	"fmt"
+	"pulse/admin/internal/model/request"
+	"pulse/admin/internal/model/resp"
+	"pulse/admin/internal/service"
+	"pulse/common/models"
+	"pulse/common/pkg/etcdclient"
+	"pulse/common/pkg/logger"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/gin-gonic/gin"
 )
 
@@ -47,7 +47,7 @@ func (n *NodeRouter) Delete(c *gin.Context) {
 	}
 
 	// 4. 清理etcd中的相关数据，删除该节点下的所有任务定义
-	// 使用 `WithPrefix()` 可以删除 /crony/job/profile/<node_uuid>/ 前缀下的所有键值对
+	// 使用 `WithPrefix()` 可以删除 /pulse/job/profile/<node_uuid>/ 前缀下的所有键值对
 	_, _ = etcdclient.Delete(fmt.Sprintf(etcdclient.KeyEtcdJobProfile, req.UUID), clientv3.WithPrefix())
 
 	// 5. 从数据库中删除节点记录

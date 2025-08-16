@@ -140,7 +140,7 @@ handler 包是项目中执行节点的核心业务逻辑层，负责任务的定
 #### `JobKey` 函数
 - 作用：生成一个在 etcd 中唯一标识某个节点上特定作业的 key
 - 输入：nodeUUID string, jobId int
-- 输出：`string`：格式化后的 etcd key，如 /crony/jobs/{nodeUUID}/{jobId}
+- 输出：`string`：格式化后的 etcd key，如 /pulse/jobs/{nodeUUID}/{jobId}
 
 #### `GetJobIDFromKey / GetProcFromKey` 函数
 - 作用：从一个 etcd 的 key 字符串中反向解析出结构化信息

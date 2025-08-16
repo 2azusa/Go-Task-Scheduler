@@ -1,9 +1,9 @@
 package service
 
 import (
-	"crony/admin/internal/model/request"
-	"crony/common/models"
-	"crony/common/pkg/dbclient"
+	"pulse/admin/internal/model/request"
+	"pulse/common/models"
+	"pulse/common/pkg/dbclient"
 )
 
 // ScriptService 结构体定义了脚本相关的服务
@@ -15,7 +15,7 @@ var DefaultScriptService = new(ScriptService)
 // Serach 方法用于根据查询条件搜索脚本
 func (script *ScriptService) Search(s *request.ReqScriptSearch) ([]models.Script, int64, error) {
 	// 获取数据库连接实例，并指定要查询的表
-	db := dbclient.GetMysqlDB().Table(models.CronyScriptTableName)
+	db := dbclient.GetMysqlDB().Table(models.PulseScriptTableName)
 
 	if s.ID > 0 {
 		db = db.Where("id = ?", s.ID)

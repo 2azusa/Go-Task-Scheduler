@@ -1,9 +1,9 @@
 package logger
 
 import (
-	"crony/common/pkg/utils"
 	"fmt"
 	"os"
+	"pulse/common/pkg/utils"
 	"time"
 
 	"github.com/natefinch/lumberjack"

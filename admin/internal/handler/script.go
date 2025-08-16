@@ -1,12 +1,12 @@
 package handler
 
 import (
-	"crony/admin/internal/model/request"
-	"crony/admin/internal/model/resp"
-	"crony/admin/internal/service"
-	"crony/common/models"
-	"crony/common/pkg/logger"
 	"fmt"
+	"pulse/admin/internal/model/request"
+	"pulse/admin/internal/model/resp"
+	"pulse/admin/internal/service"
+	"pulse/common/models"
+	"pulse/common/pkg/logger"
 	"time"
 
 	"github.com/gin-gonic/gin"

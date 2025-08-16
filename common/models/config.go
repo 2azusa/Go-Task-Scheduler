@@ -3,11 +3,11 @@ package models
 import "fmt"
 
 const (
-	CronyNodeTableName   = "node"
-	CronyJobTableName    = "job"
-	CronyJobLogTableName = "job_log"
-	CronyUserTableName   = "user"
-	CronyScriptTableName = "script"
+	PulseNodeTableName   = "node"
+	PulseJobTableName    = "job"
+	PulseJobLogTableName = "job_log"
+	PulseUserTableName   = "user"
+	PulseScriptTableName = "script"
 )
 
 type (

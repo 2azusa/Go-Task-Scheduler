@@ -3,10 +3,10 @@ package handler
 import (
 	"bytes"
 	"context"
-	"crony/common/models"
-	"crony/common/pkg/logger"
 	"fmt"
 	"os/exec"
+	"pulse/common/models"
+	"pulse/common/pkg/logger"
 	"time"
 )
 
@@ -74,9 +74,8 @@ func (c *CMDHandler) Run(job *Job) (result string, err error) {
 
 // RunPresetScript 函数用于执行一个预设的脚本
 func RunPresetScript(script *models.Script) (result string, err error) {
-	var cmd *exec.Cmd
 	// 从script模型来创建命令
-	cmd = exec.Command(script.Cmd[0], script.Cmd[1:]...)
+	cmd := exec.Command(script.Cmd[0], script.Cmd[1:]...)
 	// 创建一个bytes.Buffer，用于捕获命令的标准输出和标准错误
 	var b bytes.Buffer
 	cmd.Stdout = &b

@@ -3,8 +3,8 @@
 CURDIR=$(dirname "$0")
 cd $CURDIR
 
-PROJECTADMIN="cronyadmin"
-PROJECTNODE="cronynode"
+PROJECTADMIN="pulseadmin"
+PROJECTNODE="pulsenode"
 
 PROJECTBASE="."
 ProjectBin=$PROJECTBASE/bin
@@ -30,12 +30,12 @@ mkdir -p $NodeConf/logs
 cp -r node/conf $NodeConf
 
 #admin
-echo "building project cronyadmin..."
+echo "building project pulseadmin..."
 go build -o $ProjectBin/$PROJECTADMIN ./admin/cmd/main.go
 check
 
 #node
-echo "building project cronynode..."
+echo "building project pulsenode..."
 go build -o $ProjectBin/$PROJECTNODE ./node/cmd/main.go
 check
 

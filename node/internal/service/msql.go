@@ -1,7 +1,7 @@
 package service
 
 import (
-	"crony/common/models"
+	"pulse/common/models"
 
 	"gorm.io/gorm"
 )

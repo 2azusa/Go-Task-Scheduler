@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"crony/common/models"
-	"crony/common/pkg/httpclient"
+	"pulse/common/models"
+	"pulse/common/pkg/httpclient"
 	"strings"
 	"time"
 )
@@ -15,9 +15,8 @@ const HttpExecTimeout = 300
 
 // Run 方法实现了Handler接口，负责执行一个HTTP类型的作业
 func (h *HTTPHandler) Run(job *Job) (result string, err error) {
-	var proc *JobProc
 	// 初始化一个JobProc来追踪此次HTTP任务的执行状态
-	proc = &JobProc{
+	proc := &JobProc{
 		JobProc: &models.JobProc{
 			ID:       0, // HTTP任务没有操作系统进程ID
 			JobID:    job.ID,

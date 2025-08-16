@@ -1,7 +1,7 @@
 package notify
 
 import (
-	"crony/common/pkg/utils"
+	"pulse/common/pkg/utils"
 	"strings"
 	"time"
 )

@@ -2,10 +2,10 @@ package httpclient
 
 import (
 	"bytes"
-	"crony/common/pkg/logger"
 	"fmt"
 	"io"
 	"net/http"
+	"pulse/common/pkg/logger"
 	"time"
 )
 

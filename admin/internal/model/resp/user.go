@@ -1,6 +1,6 @@
 package resp
 
-import "crony/common/models"
+import "pulse/common/models"
 
 type (
 	RspLogin struct {

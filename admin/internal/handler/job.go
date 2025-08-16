@@ -1,18 +1,18 @@
 package handler
 
 import (
-	"crony/admin/internal/model/request"
-	"crony/admin/internal/model/resp"
-	"crony/admin/internal/service"
-	"crony/common/models"
-	"crony/common/pkg/config"
-	"crony/common/pkg/etcdclient"
-	"crony/common/pkg/logger"
 	"encoding/json"
 	"fmt"
+	"pulse/admin/internal/model/request"
+	"pulse/admin/internal/model/resp"
+	"pulse/admin/internal/service"
+	"pulse/common/models"
+	"pulse/common/pkg/config"
+	"pulse/common/pkg/etcdclient"
+	"pulse/common/pkg/logger"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/gin-gonic/gin"
 )
 
@@ -118,7 +118,7 @@ func (j *JobRouter) CreateOrUpdate(c *gin.Context) {
 		resp.FailWithMessage(resp.ERROR, "[create_job] json marshal job error", c)
 		return
 	}
-	// 将任务数据Put到etcd， key格式为 /crony/job/<node_uuid>/<job_id>
+	// 将任务数据Put到etcd， key格式为 /pulse/job/<node_uuid>/<job_id>
 	_, err = etcdclient.Put(fmt.Sprintf(etcdclient.KeyEtcdJob, req.RunOn, req.ID), string(b))
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[create_job] etcd put job error:%s", err.Error()))

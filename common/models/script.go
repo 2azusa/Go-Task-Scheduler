@@ -1,10 +1,10 @@
 package models
 
 import (
-	"crony/common/pkg/dbclient"
-	"crony/common/pkg/utils"
-	"crony/common/pkg/utils/errors"
 	"fmt"
+	"pulse/common/pkg/dbclient"
+	"pulse/common/pkg/utils"
+	"pulse/common/pkg/utils/errors"
 	"strings"
 )
 
@@ -23,7 +23,7 @@ type Script struct {
 // Insert 向数据库中插入一条新的脚本记录
 func (s *Script) Insert() (insertId int, err error) {
 	// 使用GORM的Create方法传建记录
-	err = dbclient.GetMysqlDB().Table(CronyScriptTableName).Create(s).Error
+	err = dbclient.GetMysqlDB().Table(PulseScriptTableName).Create(s).Error
 	if err == nil {
 		// 返回插入记录的ID
 		insertId = s.ID
@@ -33,25 +33,25 @@ func (s *Script) Insert() (insertId int, err error) {
 
 // Update 更新数据库中已有的脚本记录
 func (s *Script) Update() error {
-	return dbclient.GetMysqlDB().Table(CronyScriptTableName).Updates(s).Error
+	return dbclient.GetMysqlDB().Table(PulseScriptTableName).Updates(s).Error
 }
 
 // Delete 从数据库中删除一条脚本记录
 func (s *Script) Delete() error {
 	// 使用GORM的Updates方法更新记录
-	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id =?", CronyScriptTableName), s.ID).Error
+	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id =?", PulseScriptTableName), s.ID).Error
 }
 
 // FindById 根据ID查找一条脚本记录
 func (s *Script) FindById() error {
 	// 执行Sql删除语句
-	return dbclient.GetMysqlDB().Table(CronyScriptTableName).Where("id = ?", s.ID).First(s).Error
+	return dbclient.GetMysqlDB().Table(PulseScriptTableName).Where("id = ?", s.ID).First(s).Error
 }
 
 // Table 返回此模型对应的数据库表名
 func (s *Script) TableName() string {
 	// 使用GORM的First方法根据ID查找记录，并将结果填充到s结构体中
-	return CronyScriptTableName
+	return PulseScriptTableName
 }
 
 // Check 检查脚本字段的有效性

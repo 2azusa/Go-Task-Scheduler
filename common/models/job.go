@@ -1,11 +1,11 @@
 package models
 
 import (
-	"crony/common/pkg/dbclient"
-	"crony/common/pkg/utils"
-	"crony/common/pkg/utils/errors"
 	"encoding/json"
 	"fmt"
+	"pulse/common/pkg/dbclient"
+	"pulse/common/pkg/utils"
+	"pulse/common/pkg/utils/errors"
 	"strings"
 )
 
@@ -29,7 +29,7 @@ const (
 	AutoAllocation   = 2 // 自动分配
 )
 
-// 注册到 /crony/job/<node_uuid>/<job_id>
+// 注册到 /pulse/job/<node_uuid>/<job_id>
 type Job struct {
 	ID      int    `json:"id" gorm:"column:id;primary_key;auto_increment"`                                 // 任务ID
 	Name    string `json:"name" gorm:"size:64;column:name;not null;index:idx_job_name" binding:"required"` // 任务名称
@@ -70,7 +70,7 @@ func (j *Job) InitNodeInfo(status int, nodeUUID, hostname, ip string) {
 }
 
 func (j *Job) Insert() (insertId int, err error) {
-	err = dbclient.GetMysqlDB().Table(CronyJobTableName).Create(j).Error
+	err = dbclient.GetMysqlDB().Table(PulseJobTableName).Create(j).Error
 	if err == nil {
 		insertId = j.ID
 	}
@@ -79,17 +79,17 @@ func (j *Job) Insert() (insertId int, err error) {
 
 // 更新任务
 func (j *Job) Update() error {
-	return dbclient.GetMysqlDB().Table(CronyJobTableName).Updates(j).Error
+	return dbclient.GetMysqlDB().Table(PulseJobTableName).Updates(j).Error
 }
 
 // 删除任务
 func (j *Job) Delete() error {
-	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", CronyJobTableName), j.ID).Error
+	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", PulseJobTableName), j.ID).Error
 }
 
 // 根据ID查找任务
 func (j *Job) FindById() error {
-	return dbclient.GetMysqlDB().Table(CronyJobTableName).Where("id = ?", j.ID).First(j).Error
+	return dbclient.GetMysqlDB().Table(PulseJobTableName).Where("id = ?", j.ID).First(j).Error
 }
 
 // 校验任务参数
@@ -133,7 +133,7 @@ func (j *Job) Val() string {
 
 // 返回表名
 func (j *Job) TableName() string {
-	return CronyJobTableName
+	return PulseJobTableName
 }
 
 // 反序列化通知对象和脚本ID

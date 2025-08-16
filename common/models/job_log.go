@@ -1,8 +1,8 @@
 package models
 
 import (
-	"crony/common/pkg/dbclient"
 	"fmt"
+	"pulse/common/pkg/dbclient"
 )
 
 // JobLog 结构体表示作业日志表
@@ -26,17 +26,17 @@ type JobLog struct {
 
 // Update 更新当前作业日志
 func (jb *JobLog) Update() error {
-	return dbclient.GetMysqlDB().Table(CronyJobLogTableName).Updates(jb).Error
+	return dbclient.GetMysqlDB().Table(PulseJobLogTableName).Updates(jb).Error
 }
 
 // Delete 删除当前作业日志
 func (jb *JobLog) Delete() error {
-	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", CronyJobLogTableName), jb.ID).Error
+	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", PulseJobLogTableName), jb.ID).Error
 }
 
 // Insert 插入新的作业日志
 func (jb *JobLog) Insert() (insertId int, err error) {
-	err = dbclient.GetMysqlDB().Table(CronyJobLogTableName).Create(jb).Error
+	err = dbclient.GetMysqlDB().Table(PulseJobLogTableName).Create(jb).Error
 	if err == nil {
 		insertId = jb.ID
 	}
@@ -45,5 +45,5 @@ func (jb *JobLog) Insert() (insertId int, err error) {
 
 // TableName 返回作业日志表名
 func (jb *JobLog) TableName() string {
-	return CronyJobLogTableName
+	return PulseJobLogTableName
 }

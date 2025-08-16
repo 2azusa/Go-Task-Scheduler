@@ -1,10 +1,10 @@
 package notify
 
 import (
-	"crony/common/pkg/httpclient"
-	"crony/common/pkg/logger"
 	"encoding/json"
 	"fmt"
+	"pulse/common/pkg/httpclient"
+	"pulse/common/pkg/logger"
 	"strings"
 )
 

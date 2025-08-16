@@ -1,10 +1,10 @@
 package config
 
 import (
-	"crony/common/models"
-	"crony/common/pkg/utils"
 	"fmt"
 	"path"
+	"pulse/common/models"
+	"pulse/common/pkg/utils"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/spf13/viper"

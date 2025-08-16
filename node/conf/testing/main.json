@@ -3,7 +3,7 @@
     "path": "192.168.79.131",
     "port": "3307",
     "config": "charset=utf8mb4&parseTime=True&loc=Local",
-    "db-name": "crony",
+    "db-name": "pulse",
     "username": "root",
     "password": "root",
     "max-idle-conns": 100,
@@ -40,7 +40,7 @@
     "host": "smtp.qq.com",
     "is-ssl": true,
     "secret": "secret",
-    "nickname": "crony定时任务平台",
+    "nickname": "pulse定时任务平台",
     "#to": "Email default notification object",
     "to": ["test@qq.com"]
   },
@@ -51,7 +51,7 @@
   "log": {
     "level": "debug",
     "format": "console",
-    "prefix": "[crony-node]",
+    "prefix": "[pulse-node]",
     "director": "logs",
     "showLine": false,
     "encode-level": "LowercaseLevelEncoder",

@@ -2,14 +2,14 @@ package etcdclient
 
 import (
 	"context"
-	"crony/common/pkg/config"
-	"crony/common/pkg/logger"
-	"crony/common/pkg/utils/errors"
 	"fmt"
+	"pulse/common/pkg/config"
+	"pulse/common/pkg/logger"
+	"pulse/common/pkg/utils/errors"
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 var _defaultEtcd *Client
@@ -198,7 +198,7 @@ func DelLock(key string) error {
 
 // IsValidAsKeyPath 检查一个字符串是否包含路径分隔符
 func IsValidAsKeyPath(s string) bool {
-	return strings.IndexAny(s, "/\\") == -1
+	return !strings.ContainsAny(s, "/\\")
 }
 
 /* --- 下面是自定义 context 的实现 --- */

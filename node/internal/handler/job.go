@@ -1,21 +1,21 @@
 package handler
 
 import (
-	"crony/common/models"
-	"crony/common/pkg/config"
-	"crony/common/pkg/etcdclient"
-	"crony/common/pkg/logger"
-	"crony/common/pkg/notify"
-	"crony/common/pkg/utils"
-	"crony/common/pkg/utils/errors"
 	"encoding/json"
 	"fmt"
+	"pulse/common/models"
+	"pulse/common/pkg/config"
+	"pulse/common/pkg/etcdclient"
+	"pulse/common/pkg/logger"
+	"pulse/common/pkg/notify"
+	"pulse/common/pkg/utils"
+	"pulse/common/pkg/utils/errors"
 	"runtime"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/jakecoffman/cron"
 )
 
@@ -108,7 +108,7 @@ func (j *Job) RunWithRecovery() {
 	// 为执行创建一条日志记录
 	jobLogId, err := j.CreateJobLog()
 	if err != nil {
-		logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID:%d nodeUUID: %s", j.ID, j.RunOn, err.Error()))
+		logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID:%d nodeUUID: %s error: %s", j.ID, j.RunOn, err.Error()))
 	}
 	// 根据任务类型创建对应的执行处理器
 	h := CreateHandler(j)
@@ -122,11 +122,11 @@ func (j *Job) RunWithRecovery() {
 		// 1. 更新任务日志为失败状态
 		err = j.Fail(jobLogId, t, runErr.Error(), 0)
 		if err != nil {
-			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID:%d nodeUUID: %s", j.ID, j.RunOn, err.Error()))
+			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID:%d nodeUUID: %s error: %s", j.ID, j.RunOn, err.Error()))
 		}
 		// 2. 准备发送失败通知
 		node := &models.Node{UUID: j.RunOn}
-		err = node.FindByUUID()
+		node.FindByUUID()
 		var to []string
 		// 遍历需要通知的用户ID，查询用户的联系方式
 		for _, userId := range j.NotifyToArray {
@@ -156,7 +156,7 @@ func (j *Job) RunWithRecovery() {
 		// 如果任务执行成功，更新日志为成功状态
 		err = j.Success(jobLogId, t, result, 0)
 		if err != nil {
-			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID:%d nodeUUID"))
+			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job log with jobID: %d nodeUUID: %s error:%s", j.ID, j.RunOn, err.Error()))
 		}
 	}
 }
@@ -184,7 +184,7 @@ func CreateJob(j *Job) cron.FuncJob {
 		// 创建初始的任务日志
 		jobLogId, err = j.CreateJobLog()
 		if err != nil {
-			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job with jobId:%s nodeUUID: %s error:%s", j.ID, j.RunOn, err.Error()))
+			logger.GetLogger().Warn(fmt.Sprintf("Failed to write to job with jobId: %d nodeUUID: %s error:%s", j.ID, j.RunOn, err.Error()))
 		}
 		// 循环执行，直到成功或达到最大次数
 		for i < execTimes {
@@ -199,7 +199,7 @@ func CreateJob(j *Job) cron.FuncJob {
 			i++
 			if i < execTimes {
 				// 如果还未达到最大次数，准备重试
-				logger.GetLogger().Warn(fmt.Sprintf("job execution failure%jobId-%d %retry %d times #output-%s#error-%v", j.ID, i, output, runErr))
+				logger.GetLogger().Warn(fmt.Sprintf("job execution failure#jobId-%d#retry %d times #output-%s#error-%v", j.ID, i, output, runErr))
 				if j.RetryInterval > 0 {
 					time.Sleep(time.Duration(j.RetryInterval) * time.Second)
 				} else {

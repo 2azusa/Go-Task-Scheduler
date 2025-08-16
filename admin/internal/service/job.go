@@ -1,17 +1,17 @@
 package service
 
 import (
-	"crony/admin/internal/model/request"
-	"crony/admin/internal/model/resp"
-	"crony/common/models"
-	"crony/common/pkg/dbclient"
-	"crony/common/pkg/etcdclient"
-	"crony/common/pkg/logger"
-	"crony/common/pkg/utils"
 	"fmt"
+	"pulse/admin/internal/model/request"
+	"pulse/admin/internal/model/resp"
+	"pulse/common/models"
+	"pulse/common/pkg/dbclient"
+	"pulse/common/pkg/etcdclient"
+	"pulse/common/pkg/logger"
+	"pulse/common/pkg/utils"
 	"time"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // JobService 定义了任务相关的服务
@@ -23,7 +23,7 @@ var DefaultJobService = new(JobService)
 // Serach 用于根据查询条件搜索任务
 func (j *JobService) Search(s *request.ReqJobSearch) ([]models.Job, int64, error) {
 	// 获取数据可连接并指定表名
-	db := dbclient.GetMysqlDB().Table(models.CronyJobTableName)
+	db := dbclient.GetMysqlDB().Table(models.PulseJobTableName)
 	// 如果请求中包含ID， 则添加ID的查询条件
 	if s.ID > 0 {
 		db = db.Where("id = ?", s.ID)
@@ -63,7 +63,7 @@ func (j *JobService) Search(s *request.ReqJobSearch) ([]models.Job, int64, error
 // SearchJobLog 用于根据条件搜索任务日志
 func (j *JobService) SearchJobLog(s *request.ReqJobLogSearch) ([]models.JobLog, int64, error) {
 	// 获取数据库并连接指定表名
-	db := dbclient.GetMysqlDB().Table(models.CronyJobLogTableName)
+	db := dbclient.GetMysqlDB().Table(models.PulseJobLogTableName)
 	// 如果请求中包含名称，则添加名称的模糊查询条件
 	if len(s.Name) > 0 {
 		db = db.Where("name like ?", s.Name+"%")
@@ -101,7 +101,7 @@ func (j *JobService) SearchJobLog(s *request.ReqJobLogSearch) ([]models.JobLog, 
 // GetToDayJobExcCount 获取今天执行的任务总数
 func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 	// 查询今天开始时间之后、已结束且执行结果符合条件的任务日志
-	db := dbclient.GetMysqlDB().Table(models.CronyJobLogTableName).Where("start_time > ? and end_time != 0 and success =?", utils.GetTodayUnix(), success)
+	db := dbclient.GetMysqlDB().Table(models.PulseJobLogTableName).Where("start_time > ? and end_time != 0 and success =?", utils.GetTodayUnix(), success)
 	var total int64
 	// 计算总数
 	err := db.Count(&total).Error
@@ -116,7 +116,7 @@ func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 func (j *JobService) GetJobExcCount(start, end int64, success int) ([]resp.DateCount, error) {
 	var dateCount []resp.DateCount
 	// 查询在指定时间段内、已结束且执行结果符合条件的任务，并按天分组计数
-	db := dbclient.GetMysqlDB().Table(models.CronyJobLogTableName).Select("FROM_UNITIME (start_time, '%Y-%m-%d') AS date", "COUNT (*) AS count").Group("date").Order("date ASC").Where("start_time > ? and start_time < ? and end_time != 0 and success = ?", start, end, success)
+	db := dbclient.GetMysqlDB().Table(models.PulseJobLogTableName).Select("FROM_UNITIME (start_time, '%Y-%m-%d') AS date", "COUNT (*) AS count").Group("date").Order("date ASC").Where("start_time > ? and start_time < ? and end_time != 0 and success = ?", start, end, success)
 	err := db.Find(&dateCount).Error
 	if err != nil {
 		return nil, err
@@ -127,7 +127,7 @@ func (j *JobService) GetJobExcCount(start, end int64, success int) ([]resp.DateC
 // GetNotAssignedJob 获取所有未分配的任务
 func (j *JobService) GetNotAssignedJob() (jobs []models.Job, err error) {
 	// 查询状态为“未分配”的任务
-	err = dbclient.GetMysqlDB().Table(models.CronyJobTableName).Where("status = ?", models.JobStatusNotAssigned).Find(&jobs).Error
+	err = dbclient.GetMysqlDB().Table(models.PulseJobTableName).Where("status = ?", models.JobStatusNotAssigned).Find(&jobs).Error
 	return
 }
 
@@ -220,7 +220,7 @@ func RunLogCleaner(cleanPeriod time.Duration, expiration int64) (close chan stru
 // cleanupLogs 删除指定时间戳之前的日志
 func cleanupLogs(expirationTime int64) error {
 	// 构造删除语句
-	sql := fmt.Sprintf("delete from %s where start_time < ?", models.CronyJobLogTableName)
+	sql := fmt.Sprintf("delete from %s where start_time < ?", models.PulseJobLogTableName)
 	// 执行删除操作
 	return dbclient.GetMysqlDB().Exec(sql, time.Now().Unix()-expirationTime).Error
 }

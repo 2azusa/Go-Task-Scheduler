@@ -1,8 +1,8 @@
 package models
 
 import (
-	"crony/common/pkg/dbclient"
 	"fmt"
+	"pulse/common/pkg/dbclient"
 )
 
 const (
@@ -11,7 +11,7 @@ const (
 	NodeSystemInfoSwitch = "alive" // 节点系统信息开关
 )
 
-// 注册到 /crony/node/<node_uuid>
+// 注册到 /pulse/node/<node_uuid>
 type Node struct {
 	ID       int    `json:"id" gorm:"column:id;primary_key;auto_increment"`                // 主键ID
 	PID      string `json:"pid" gorm:"size:16;column:pid;not null"`                        // 进程ID
@@ -32,7 +32,7 @@ func (n *Node) String() string {
 
 // 插入节点数据
 func (n *Node) Insert() (insertId int, err error) {
-	err = dbclient.GetMysqlDB().Table(CronyNodeTableName).Create(n).Error
+	err = dbclient.GetMysqlDB().Table(PulseNodeTableName).Create(n).Error
 	if err == nil {
 		insertId = n.ID
 	}
@@ -41,20 +41,20 @@ func (n *Node) Insert() (insertId int, err error) {
 
 // 更新节点数据
 func (n *Node) Update() error {
-	return dbclient.GetMysqlDB().Table(CronyNodeTableName).Updates(n).Error
+	return dbclient.GetMysqlDB().Table(PulseNodeTableName).Updates(n).Error
 }
 
 // 删除节点数据
 func (n *Node) Delete() error {
-	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where uuid = ?", CronyNodeTableName), n.UUID).Error
+	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where uuid = ?", PulseNodeTableName), n.UUID).Error
 }
 
 // 根据UUID查找节点
 func (n *Node) FindByUUID() error {
-	return dbclient.GetMysqlDB().Table(CronyNodeTableName).Where("uuid = ?", n.UUID).First(n).Error
+	return dbclient.GetMysqlDB().Table(PulseNodeTableName).Where("uuid = ?", n.UUID).First(n).Error
 }
 
 // 返回表名
 func (n *Node) TableName() string {
-	return CronyNodeTableName
+	return PulseNodeTableName
 }

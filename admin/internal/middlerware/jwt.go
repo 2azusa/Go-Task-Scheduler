@@ -1,9 +1,9 @@
 package middlerware
 
 import (
-	"crony/admin/internal/model/resp"
-	"crony/common/pkg/logger"
 	"errors"
+	"pulse/admin/internal/model/resp"
+	"pulse/common/pkg/logger"
 	"time"
 
 	"golang.org/x/sync/singleflight"

@@ -1,8 +1,8 @@
 package models
 
 import (
-	"crony/common/pkg/dbclient"
 	"fmt"
+	"pulse/common/pkg/dbclient"
 )
 
 const (
@@ -24,17 +24,17 @@ type User struct {
 
 // Update 更新用户信息
 func (u *User) Update() error {
-	return dbclient.GetMysqlDB().Table(CronyUserTableName).Updates(u).Error
+	return dbclient.GetMysqlDB().Table(PulseUserTableName).Updates(u).Error
 }
 
 // Delete 删除用户
 func (u *User) Delete() error {
-	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", CronyUserTableName), u.ID).Error
+	return dbclient.GetMysqlDB().Exec(fmt.Sprintf("delete from %s where id = ?", PulseUserTableName), u.ID).Error
 }
 
 // Insert 插入新用户
 func (u *User) Insert() (insertId int, err error) {
-	err = dbclient.GetMysqlDB().Table(CronyUserTableName).Create(u).Error
+	err = dbclient.GetMysqlDB().Table(PulseUserTableName).Create(u).Error
 	if err == nil {
 		insertId = u.ID
 	}
@@ -43,10 +43,10 @@ func (u *User) Insert() (insertId int, err error) {
 
 // FindById 根据ID查找用户
 func (u *User) FindById() error {
-	return dbclient.GetMysqlDB().Table(CronyUserTableName).Select("id", "username", "email", "role", "created", "updated").Where("id = ?", u.ID).First(u).Error
+	return dbclient.GetMysqlDB().Table(PulseUserTableName).Select("id", "username", "email", "role", "created", "updated").Where("id = ?", u.ID).First(u).Error
 }
 
 // TableName 返回用户表名
 func (u *User) TableName() string {
-	return CronyUserTableName
+	return PulseUserTableName
 }

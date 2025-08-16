@@ -1,9 +1,9 @@
 package dbclient
 
 import (
-	"crony/common/pkg/logger"
 	"database/sql"
 	"fmt"
+	"pulse/common/pkg/logger"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"

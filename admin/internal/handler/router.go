@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"crony/admin/internal/middlerware"
-	"crony/admin/internal/model/resp"
+	"pulse/admin/internal/middlerware"
+	"pulse/admin/internal/model/resp"
 
 	"github.com/gin-gonic/gin"
 )

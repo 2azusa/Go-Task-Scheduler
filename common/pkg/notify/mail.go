@@ -2,8 +2,8 @@ package notify
 
 import (
 	"bytes"
-	"crony/common/pkg/logger"
 	"fmt"
+	"pulse/common/pkg/logger"
 	"text/template"
 
 	"github.com/go-gomail/gomail"

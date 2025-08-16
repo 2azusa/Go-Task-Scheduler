@@ -1,6 +1,6 @@
 package handler
 
-import "crony/common/models"
+import "pulse/common/models"
 
 // Handler 是一个接口，定义了所有具体的任务处理器需要实现的方法
 type Handler interface {

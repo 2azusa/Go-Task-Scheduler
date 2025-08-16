@@ -9,10 +9,10 @@ etcdclient 包是项目与 etcd 基础交互的唯一入口和高级封装层, �
 ## `const.go`  
 
 集中定义了所有存储在 etcd 中的键(key)的结构和前缀模板   
-keyEtcdProfile: 根路径 /crony/。  
-KeyEtcdNodeProfile 和 KeyEtcdNode: 用于节点注册的键，如 /crony/node/{node_uuid}。  
-KeyEtcdProcProfile 系列: 用于记录正在执行的任务进程的键，如 /crony/proc/{node_uuid}/{job_id}/{pid}。  
-KeyEtcdJobProfile 和 KeyEtcdJob: 用于存储任务定义的键，如 /crony/job/{node_uuid}/{job_id}。  
+keyEtcdProfile: 根路径 /pulse/。  
+KeyEtcdNodeProfile 和 KeyEtcdNode: 用于节点注册的键，如 /pulse/node/{node_uuid}。  
+KeyEtcdProcProfile 系列: 用于记录正在执行的任务进程的键，如 /pulse/proc/{node_uuid}/{job_id}/{pid}。  
+KeyEtcdJobProfile 和 KeyEtcdJob: 用于存储任务定义的键，如 /pulse/job/{node_uuid}/{job_id}。  
 KeyEtcdOnceProfile 和 KeyEtcdOnce: 用于一次性任务的键。  
 KeyEtcdLockProfile 和 KeyEtcdLock: 用于分布式锁的键。  
 KeyEtcdSystemProfile 系列: 用于系统控制命令的键。  

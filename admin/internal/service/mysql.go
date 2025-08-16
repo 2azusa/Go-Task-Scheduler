@@ -1,10 +1,10 @@
 package service
 
 import (
-	"crony/common/models"
-	"crony/common/pkg/logger"
 	"fmt"
 	"os"
+	"pulse/common/models"
+	"pulse/common/pkg/logger"
 
 	"errors"
 
@@ -33,7 +33,7 @@ func RegisterTables(db *gorm.DB) error {
 	// 调用 checkDataExist 函数检查数据是否存在，避免重复插入
 	if exist := checkDataExist(db); !exist {
 		// 如果数据不存在，则向用户表中插入初始数据
-		if err := db.Table(models.CronyUserTableName).Create(&entities).Error; err != nil {
+		if err := db.Table(models.PulseUserTableName).Create(&entities).Error; err != nil {
 			return fmt.Errorf("failed to initialize table data: %w", err)
 		}
 	}
@@ -44,7 +44,7 @@ func RegisterTables(db *gorm.DB) error {
 // checkDataExist 函数用于检查数据库是否存入 root 用户
 func checkDataExist(db *gorm.DB) bool {
 	// 调用 `errors.Is` 函数来判断返回的错误是否就是 gorm.ErrRecordNotFound
-	if errors.Is(db.Table(models.CronyUserTableName).Where("username = ?", "root").First(&models.User{}).Error, gorm.ErrRecordNotFound) { // 判断是否存在数据
+	if errors.Is(db.Table(models.PulseUserTableName).Where("username = ?", "root").First(&models.User{}).Error, gorm.ErrRecordNotFound) { // 判断是否存在数据
 		return false
 	}
 	return true

@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"crony/common/pkg/etcdclient"
+	"pulse/common/pkg/etcdclient"
 
-	"github.com/coreos/etcd/clientv3"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // WatchOnce 函数用于创建一个etcd的watch通道，专门用于监听一次性任务
