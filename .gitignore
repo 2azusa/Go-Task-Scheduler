@@ -33,3 +33,26 @@ Editor/IDE
 .vscode/
 
 admin/web/
+
+
+
+conf/files/*.json
+dist
+.tags
+.tags_sorted_by_file
+bin/*/*server
+.DS_Store
+.vscode
+.idea
+
+admin/logs
+
+
+node/logs
+#only for github
+admin/conf
+node/conf
+
+package-lock.json
+
+bin

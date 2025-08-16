@@ -1,11 +1,11 @@
 {
   "mysql": {
-    "path": "192.168.79.131",
-    "port": "3307",
+    "path": "127.0.0.1",
+    "port": "3306",
     "config": "charset=utf8mb4&parseTime=True&loc=Local",
     "db-name": "pulse",
-    "username": "root",
-    "password": "root",
+    "username": "pulse_user",
+    "password": "123456",
     "max-idle-conns": 100,
     "max-open-conns": 100,
     "log-mode": "warn",
@@ -39,7 +39,7 @@
     "host": "smtp.qq.com",
     "is-ssl": true,
     "secret": "secret",
-    "nickname": "pulse定时任务平台",
+    "nickname": "Pulse 定时任务平台",
     "#to": "Email default notification object",
     "to": ["test@qq.com"]
   },

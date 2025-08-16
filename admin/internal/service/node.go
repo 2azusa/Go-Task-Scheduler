@@ -16,8 +16,8 @@ import (
 	"sync"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/api/v3/mvccpb"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // NodeWatcherService 结构体定义了监视器服务
@@ -31,7 +31,7 @@ type NodeWatcherService struct {
 var DefaultNodeWatcher *NodeWatcherService
 
 // NewNodeWatcherService 用于创建一个节点监视器实例
-func NewNodeWtacherService() *NodeWatcherService {
+func NewNodeWatcherService() *NodeWatcherService {
 	return &NodeWatcherService{
 		client:   etcdclient.GetEtcdClient(),   // 获取etcd客户端单例
 		nodeList: make(map[string]models.Node), // 初始化节点列表map

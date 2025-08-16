@@ -12,8 +12,8 @@ import (
 	"pulse/common/pkg/logger"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/gin-gonic/gin"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
 // JobRouter 结构体用于组织与任务相关的路有处理器

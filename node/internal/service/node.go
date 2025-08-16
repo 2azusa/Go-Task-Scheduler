@@ -230,25 +230,6 @@ func (srv *NodeServer) addJob(j *handler.Job) {
 	}
 }
 
-// panicToError 将 panic 转换为 error
-func panicToError(fn func()) (err error) {
-	defer func() {
-		if r := recover(); r != nil {
-			switch v := r.(type) {
-			case error:
-				err = v
-			case string:
-				err = fmt.Errorf("panic: %s", v)
-			default:
-				err = fmt.Errorf("panic: %v", v)
-			}
-		}
-	}()
-
-	fn()
-	return nil
-}
-
 func (srv *NodeServer) jobCronName(jobId int) string {
 	return fmt.Sprintf(srv.UUID+"/%d", jobId)
 }
@@ -269,4 +250,23 @@ func (srv *NodeServer) deleteJob(jobId int) {
 		delete(srv.jobs, jobId)
 		return
 	}
+}
+
+// panicToError 将 panic 转换为 error
+func panicToError(fn func()) (err error) {
+	defer func() {
+		if r := recover(); r != nil {
+			switch v := r.(type) {
+			case error:
+				err = v
+			case string:
+				err = fmt.Errorf("panic: %s", v)
+			default:
+				err = fmt.Errorf("panic: %v", v)
+			}
+		}
+	}()
+
+	fn()
+	return nil
 }
