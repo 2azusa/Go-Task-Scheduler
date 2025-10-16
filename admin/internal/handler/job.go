@@ -23,6 +23,16 @@ type JobRouter struct{}
 var defaultJobRouter = new(JobRouter)
 
 // CreateOrUpdate 用于创建或更新任务的HTTP请求
+// @Summary Create or update a job
+// @Description Creates a new job or updates an existing one.
+// @Tags job
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqJobUpdate  true  "Job details"
+// @Success 200 {object} request.ReqJobUpdate "Operation success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/add [post]
 func (j *JobRouter) CreateOrUpdate(c *gin.Context) {
 	var req request.ReqJobUpdate
 	// 1. 绑定并解析请求体中的JSON数据到req结构体
@@ -130,7 +140,16 @@ func (j *JobRouter) CreateOrUpdate(c *gin.Context) {
 	resp.OkWithDetailed(req, "operate success", c)
 }
 
-// Delete 用于删除一个或多个任务
+// @Summary Delete jobs
+// @Description Deletes one or more jobs by their IDs.
+// @Tags job
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ByIDS  true  "List of job IDs"
+// @Success 200 {object} resp.Response "Delete success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/del [post]
 func (j *JobRouter) Delete(c *gin.Context) {
 	var req request.ByIDS
 	// 绑定请求体中的ID列表
@@ -164,7 +183,15 @@ func (j *JobRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// FindById 用于根据ID查找单个任务
+// @Summary Find a job by ID
+// @Description Retrieves the details of a single job by its ID.
+// @Tags job
+// @Produce  json
+// @Param   id query int true "Job ID"
+// @Success 200 {object} models.Job "Find success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/find [get]
 func (j *JobRouter) FindById(c *gin.Context) {
 	var req request.ByID
 	// 从URL查询参数中绑定ID
@@ -188,7 +215,16 @@ func (j *JobRouter) FindById(c *gin.Context) {
 	resp.OkWithDetailed(job, "find success", c)
 }
 
-// Search 用于搜索任务
+// @Summary Search for jobs
+// @Description Searches for jobs based on specified criteria.
+// @Tags job
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqJobSearch  true  "Search criteria"
+// @Success 200 {object} resp.PageResult "Search results"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/search [post]
 func (j *JobRouter) Search(c *gin.Context) {
 	var req request.ReqJobSearch
 	// 绑定请求体中的搜索条件
@@ -221,7 +257,16 @@ func (j *JobRouter) Search(c *gin.Context) {
 	}, "search success", c)
 }
 
-// SearchLog 用于搜索任务执行日志
+// @Summary Search for job logs
+// @Description Searches for job execution logs based on specified criteria.
+// @Tags job
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqJobLogSearch  true  "Search criteria for logs"
+// @Success 200 {object} resp.PageResult "Search results for logs"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/log [post]
 func (j *JobRouter) SearchLog(c *gin.Context) {
 	var req request.ReqJobLogSearch
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -247,7 +292,16 @@ func (j *JobRouter) SearchLog(c *gin.Context) {
 	}, "search success", c)
 }
 
-// Once 用于处理立即执行一个任务的请求
+// @Summary Execute a job once
+// @Description Triggers a one-time execution of a specific job on a specific node.
+// @Tags job
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqJobOnce  true  "Job execution details"
+// @Success 200 {object} resp.Response "Job once success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /job/once [post]
 func (j *JobRouter) Once(c *gin.Context) {
 	var req request.ReqJobOnce
 	var err error

@@ -20,6 +20,16 @@ type NodeRouter struct{}
 var defaultNodeRouter = new(NodeRouter)
 
 // Delete 方法用于处理删除节点的HTTP请求
+// @Summary Delete a node
+// @Description Deletes a node by its UUID. The node must be inactive.
+// @Tags node
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ByUUID  true  "Node UUID"
+// @Success 200 {object} resp.Response "Delete success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /node/del [post]
 func (n *NodeRouter) Delete(c *gin.Context) {
 	// 1. 解析请求参数
 	var req request.ByUUID // 定义一个变量，用于接收包含UUID的请求体
@@ -62,7 +72,16 @@ func (n *NodeRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// Serach 方法用于处理搜索节点的HTTP请求
+// @Summary Search for nodes
+// @Description Searches for nodes based on specified criteria.
+// @Tags node
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqNodeSearch  true  "Search criteria"
+// @Success 200 {object} resp.PageResult "Search results"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /node/search [post]
 func (n *NodeRouter) Search(c *gin.Context) {
 	// 1. 节点和校验请求参数
 	var req request.ReqNodeSearch // 定义变量，用于接收节点的搜索请求

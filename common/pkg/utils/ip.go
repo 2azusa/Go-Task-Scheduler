@@ -26,5 +26,5 @@ func LocalIP() (net.IP, error) {
 			}
 		}
 	}
-	return nil, fmt.Errorf("connot find locak IP address")
+	return nil, fmt.Errorf("connot find local IP address")
 }

@@ -12,11 +12,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// ScriptRouter 处理脚本相关的路由
 type ScriptRouter struct{}
 
+// RegisterRouters 注册脚本相关的路由
 var defaultScriptRouter = new(ScriptRouter)
 
 // CreateOrUpdate 用于创建或更新脚本
+// @Summary Create or update a script
+// @Description Creates a new script or updates an existing one.
+// @Tags script
+// @Accept  json
+// @Produce  json
+// @Param   body  body   models.Script  true  "Script details"
+// @Success 200 {object} models.Script "Operation success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /script/add [post]
 func (s *ScriptRouter) CreateOrUpdate(c *gin.Context) {
 	var req models.Script
 	// 将请求的JSON绑定到req
@@ -50,7 +62,15 @@ func (s *ScriptRouter) CreateOrUpdate(c *gin.Context) {
 	resp.OkWithDetailed(req, "operate success", c)
 }
 
-// Delete 用于删除脚本
+// @Summary Delete scripts
+// @Description Deletes one or more scripts by their IDs.
+// @Tags script
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ByIDS  true  "List of script IDs"
+// @Success 200 {object} resp.Response "Delete success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Router /script/del [post]
 func (s *ScriptRouter) Delete(c *gin.Context) {
 	var req request.ByIDS
 	// 将请求的JSON绑定到req
@@ -79,7 +99,15 @@ func (s *ScriptRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// 用于根据ID查找单个脚本
+// @Summary Find a script by ID
+// @Description Retrieves the details of a single script by its ID.
+// @Tags script
+// @Produce  json
+// @Param   id query int true "Script ID"
+// @Success 200 {object} models.Script "Find success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /script/find [get]
 func (s *ScriptRouter) FindById(c *gin.Context) {
 	var req request.ByID
 	// 将URL查询参数中的ID绑定到req
@@ -100,7 +128,16 @@ func (s *ScriptRouter) FindById(c *gin.Context) {
 	resp.OkWithDetailed(script, "find success", c)
 }
 
-// Search 用于搜索脚本列表
+// @Summary Search for scripts
+// @Description Searches for scripts based on specified criteria.
+// @Tags script
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqScriptSearch  true  "Search criteria"
+// @Success 200 {object} resp.PageResult "Search results"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /script/search [post]
 func (s *ScriptRouter) Search(c *gin.Context) {
 	var req request.ReqScriptSearch
 	if err := c.ShouldBindJSON(&req); err != nil {

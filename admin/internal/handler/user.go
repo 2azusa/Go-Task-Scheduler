@@ -21,6 +21,16 @@ type UserRouter struct{}
 var defaultUserRouter = new(UserRouter)
 
 // Login 用于处理用户登陆请求
+// @Summary User Login
+// @Description Authenticates a user and returns a token.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqUserLogin  true  "Login Credentials"
+// @Success 200 {object} resp.RspLogin "Successful login"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /login [post]
 func (u *UserRouter) Login(c *gin.Context) {
 	var req request.ReqUserLogin
 	// 绑定并验证请求的JSON数据u
@@ -57,7 +67,16 @@ func (u *UserRouter) Login(c *gin.Context) {
 	}, "login success", c)
 }
 
-// Register 用于处理用户注册请求
+// @Summary Register a new user
+// @Description Creates a new user account.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqUserRegister  true  "User registration details"
+// @Success 200 {object} models.User "Successfully registered user"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /register [post]
 func (u *UserRouter) Register(c *gin.Context) {
 	var req request.ReqUserRegister
 	// 绑定并验证请求的JSONshuju
@@ -98,6 +117,16 @@ func (u *UserRouter) Register(c *gin.Context) {
 }
 
 // Update 处理更新用户信息的请求
+// @Summary Update user information
+// @Description Updates a user's information.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   models.User  true  "User information to update"
+// @Success 200 {object} resp.Response "Update success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /user/update [post]
 func (u *UserRouter) Update(c *gin.Context) {
 	var req models.User
 	// 绑定并验证请求的JSON数据
@@ -119,7 +148,15 @@ func (u *UserRouter) Update(c *gin.Context) {
 	resp.OkWithMessage("update success", c)
 }
 
-// Delete 处理删除用户的请求
+// @Summary Delete users
+// @Description Deletes one or more users by their IDs.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ByIDS  true  "List of user IDs"
+// @Success 200 {object} resp.Response "Delete success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Router /user/del [post]
 func (u *UserRouter) Delete(c *gin.Context) {
 	var req request.ByIDS
 	// 绑定并验证包含ID列表的请求JSON
@@ -140,7 +177,16 @@ func (u *UserRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// ChangePassword 用于处理修改密码的请求
+// @Summary Change user password
+// @Description Changes the password for the currently logged-in user.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqChangePassword  true  "Password change request"
+// @Success 200 {object} resp.Response "Update success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /user/change_pw [post]
 func (u *UserRouter) ChangePassword(c *gin.Context) {
 	var req request.ReqChangePassword
 	// 绑定并验证请求的JSON数据
@@ -161,7 +207,15 @@ func (u *UserRouter) ChangePassword(c *gin.Context) {
 	resp.OkWithMessage("update success", c)
 }
 
-// FindById 用于根据ID查找用户
+// @Summary Find a user by ID
+// @Description Retrieves the details of a single user by their ID. If no ID is provided, it retrieves the current user's details.
+// @Tags users
+// @Produce  json
+// @Param   id query int false "User ID"
+// @Success 200 {object} models.User "Find success"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /user/find [get]
 func (u *UserRouter) FindById(c *gin.Context) {
 	var req request.ByID
 	// 绑定并验证URL查询参数
@@ -182,10 +236,19 @@ func (u *UserRouter) FindById(c *gin.Context) {
 		return
 	}
 	// 返回成功的响应，包含查找到的用户信息
-	resp.OkWithDetailed(userModel, "finc_success", c)
+	resp.OkWithDetailed(userModel, "find success", c)
 }
 
-// Search 用于根据条件搜索用户
+// @Summary Search for users
+// @Description Searches for users based on specified criteria.
+// @Tags users
+// @Accept  json
+// @Produce  json
+// @Param   body  body   request.ReqUserSearch  true  "Search criteria"
+// @Success 200 {object} resp.PageResult "Search results"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /user/search [post]
 func (u *UserRouter) Search(c *gin.Context) {
 	var req request.ReqUserSearch
 	// 绑定并验证请求的JSON数据

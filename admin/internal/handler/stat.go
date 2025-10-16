@@ -21,6 +21,13 @@ type StatRouter struct{}
 var defaultStatRouter = new(StatRouter)
 
 // GetTodayStatistics 获取当日的统计数据
+// @Summary Get today's statistics
+// @Description Retrieves statistics for the current day, including node counts and job execution counts.
+// @Tags statis
+// @Produce  json
+// @Success 200 {object} resp.RspSystemStatistics "Today's statistics"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /statis/today [get]
 func (s *StatRouter) GetTodayStatistics(c *gin.Context) {
 	// 获取今日任务成功执行的次数
 	jobExcSuccess, err := service.DefaultJobService.GetTodayJobExcCount(models.JobExcSuccess)
@@ -57,7 +64,13 @@ func (s *StatRouter) GetTodayStatistics(c *gin.Context) {
 	}, "ok", c)
 }
 
-// GetWeekStatistics 获取最近一周的统计数据
+// @Summary Get weekly statistics
+// @Description Retrieves job execution statistics for the last 7 days.
+// @Tags statis
+// @Produce  json
+// @Success 200 {object} resp.RspDateCount "Weekly statistics"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /statis/week [get]
 func (s *StatRouter) GetWeekStatistics(c *gin.Context) {
 	// 获取当前时间
 	t := time.Now()
@@ -78,7 +91,15 @@ func (s *StatRouter) GetWeekStatistics(c *gin.Context) {
 	}, "ok", c)
 }
 
-// GetSystemInfo 获取系统信息
+// @Summary Get system information
+// @Description Retrieves system information for the admin server or a specific worker node.
+// @Tags statis
+// @Produce  json
+// @Param   uuid query string false "Node UUID"
+// @Success 200 {object} utils.Server "System information"
+// @Failure 400 {object} resp.Response "Bad request"
+// @Failure 500 {object} resp.Response "Internal server error"
+// @Router /statis/system [get]
 func (s *StatRouter) GetSystemInfo(c *gin.Context) {
 	var req request.ByUUID
 	// 绑定查询参数

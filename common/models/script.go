@@ -13,9 +13,9 @@ import (
 type Script struct {
 	ID      int    `json:"id" gorm:"column:id;primary_key:auto_increment"`                                     // 脚本ID
 	Name    string `json:"name" gorm:"size:256;column:name;not null;index:idx_script_name" binding:"required"` // 脚本名称
-	Command string `json:"command" gorm:"type:text;column:command:not null" binding:"required"`                // 脚本执行的命令
+	Command string `json:"command" gorm:"type:text;column:command;not null" binding:"required"`                // 脚本执行的命令
 	Created int64  `json:"created" gorm:"column:created;not null"`                                             // 传建时间的时间戳
-	Updated int64  `json:"updated" gorm:"column: updated;default:0"`                                           // 更新时间的时间戳
+	Updated int64  `json:"updated" gorm:"column:updated;default:0"`                                            // 更新时间的时间戳
 
 	Cmd []string `json:"cmd" gorm:"-"` // 用于存储分割后的命令和参数
 }

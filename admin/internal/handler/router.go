@@ -5,16 +5,18 @@ import (
 	"pulse/admin/internal/model/resp"
 
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 // RegisterRouters 是注册所有路有的入口点
 func RegisterRouters(r *gin.Engine) {
 	// 使用Cors中间件来允许跨域请求
 	r.Use(middlerware.Cors())
-
+	// 添加swagger路由
+	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	// 注册所有的API相关路有
 	configRoute(r)
-
 	// 配置静态文件服务，用于前端页面
 	configNoRoute(r)
 }

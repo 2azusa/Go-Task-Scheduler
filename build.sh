@@ -42,7 +42,7 @@ check
 #web
 echo "building web..."
 cd $WebFile
-npm install
+yarn install
 yarn build
 mv ./dist ../../bin/
 

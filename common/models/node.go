@@ -19,7 +19,7 @@ type Node struct {
 	Hostname string `json:"hostname" gorm:"size64;column:hostname;default:''"`             // 主机名
 	UUID     string `json:"uuid" gorm:"size:128;column:uuid;not null;index:idx_node_uuid"` // 节点唯一标识
 	Version  string `json:"version" gorm:"size:64;column:version;default:''"`              // 版本号
-	Status   int    `json:"statur" gorm:"size:1;column:status"`                            // 状态
+	Status   int    `json:"status" gorm:"size:1;column:status"`                            // 状态
 
 	UpTime   int64 `json:"up" gorm:"column:up;not null"`      // 上线时间
 	DownTime int64 `json:"down" gorm:"column:down;default:0"` // 下线时间

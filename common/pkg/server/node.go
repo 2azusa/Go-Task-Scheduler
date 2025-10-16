@@ -15,6 +15,7 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
+// NodeOptions 定义了 Node 服务器的命令行启动参数
 var (
 	NodeOptions struct {
 		flags.Options
@@ -27,6 +28,8 @@ var (
 	}
 )
 
+// InitNodeServer 函数用于初始化 Node 服务器
+// 不创建实例，而是初始化所有必要的依赖
 func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) {
 	var parser = flags.NewParser(&NodeOptions, flags.Default)
 	if _, err := parser.Parse(); err != nil {
@@ -36,17 +39,21 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 		return nil, err
 	}
 
+	// 如果指定了版本参数，打印版本并退出
 	if NodeOptions.Version {
 		fmt.Printf("%s Version:%s\n", NodeModule, Version)
 		os.Exit(0)
 	}
 
+	// 如果启用 pprof，则在后台启动一个 pprof HTTP 服务器
 	if NodeOptions.EnablePProfile {
 		go func() {
 			fmt.Printf("enable pprof http server at:%d\n", NodeOptions.PProfilePort)
 			fmt.Println(http.ListenAndServe(fmt.Sprintf(":%d", NodeOptions.PProfilePort), nil))
 		}()
 	}
+
+	// 初始化配置环境
 	var env = config.Environment(NodeOptions.Environment)
 	if env.Invalid() {
 		var err error
@@ -65,12 +72,14 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 		fmt.Printf("node-server:init config error:%s", err.Error())
 		return nil, err
 	}
+
+	// 初始化各个公共组件
 	logConfig := defaultConfig.Log
 	mysqlConfig := defaultConfig.Mysql
 	etcdConfig := defaultConfig.Etcd
-	//log
+	// 初始化日志
 	logger.Init(serverName, logConfig.Level, logConfig.Format, logConfig.Prefix, logConfig.Director, logConfig.ShowLine, logConfig.EncodeLevel, logConfig.StacktraceKey, logConfig.LogInConsole)
-	//notify
+	// 初始化通知
 	notify.Init(&notify.Mail{
 		Port:     defaultConfig.Email.Port,
 		From:     defaultConfig.Email.From,
@@ -81,7 +90,7 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 		Url:  defaultConfig.WebHook.Url,
 		Kind: defaultConfig.WebHook.Kind,
 	})
-	//db
+	// 初始化数据库
 	dsn := mysqlConfig.EmptyDsn()
 	createSql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4 ;", mysqlConfig.Dbname)
 	if err := dbclient.CreateDatabase(dsn, "mysql", createSql); err != nil {
@@ -93,13 +102,14 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 	} else {
 		logger.GetLogger().Info("node-server:init mysql success")
 	}
-	//etcd
+	// 初始化 Etcd
 	_, err = etcdclient.Init(etcdConfig.Endpoints, etcdConfig.DialTimeout, etcdConfig.ReqTimeout)
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("node-server:init etcd failed , error:%s", err.Error()))
 	} else {
 		logger.GetLogger().Info("node-server:init etcd success")
 	}
+	// 执行额外的初始化函数
 	if len(inits) > 0 {
 		for _, init := range inits {
 			init()

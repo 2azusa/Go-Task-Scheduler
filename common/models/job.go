@@ -35,7 +35,7 @@ type Job struct {
 	Name    string `json:"name" gorm:"size:64;column:name;not null;index:idx_job_name" binding:"required"` // 任务名称
 	Command string `json:"command" gorm:"type:text;column:command;not null" binding:"required"`            // 执行命令
 	// 预设脚本ID
-	ScriptID      []byte `josn:"-" gorm:"size:256;column:script_id;default:null"` // 脚本ID（字节数组）
+	ScriptID      []byte `json:"-" gorm:"size:256;column:script_id;default:null"` // 脚本ID（字节数组）
 	ScriptIDArray []int  `json:"script_id" gorm:"-"`                              // 脚本ID数组
 	// 任务执行超时时间设置，大于0时生效
 	Timeout int64 `json:"timeout" gorm:"size:13;column:timeout;default:0"` // 超时时间
@@ -54,7 +54,7 @@ type Job struct {
 	RunOn         string `json:"run_on" gorm:"size:128;column:run_on;index:idx_job_run_on;"`                 // 运行节点
 	Note          string `json:"note" gorm:"size:512;column:note;default:''"`                                // 备注
 	Created       int64  `json:"created" gorm:"column:created;not null"`                                     // 创建时间
-	Updated       int64  `json:"updated" gorm:"column:upddated;default:0"`                                   // 更新时间
+	Updated       int64  `json:"updated" gorm:"column:updated;default:0"`                                    // 更新时间
 
 	Hostname string   `json:"host_name" gorm:"-"` // 主机名
 	Ip       string   `json:"ip" gorm:"-"`        // IP地址

@@ -13,11 +13,11 @@ var _defaultDB *gorm.DB
 
 // Init 函数负责初始化数据库连接
 //
-// @param dsn string: 数据库源名称, 包含了连接所需的所有信息
-// @param logMode string: GORM 的日志模式
-// @param maxIdleConns int: 连接池中最大空闲连接数
-// @param maxOpenConns int: 连接池中最大打开连接数
-// @return *gorm.DB: 成功时返回 GORM 数据库实例的指针
+// dsn string: 数据库源名称, 包含了连接所需的所有信息
+// logMode string: GORM 的日志模式
+// maxIdleConns int: 连接池中最大空闲连接数
+// maxOpenConns int: 连接池中最大打开连接数
+// return *gorm.DB: 成功时返回 GORM 数据库实例的指针
 func Init(dsn, logMode string, maxIdleConns, maxOpenConns int) (*gorm.DB, error) {
 	// 配置 GORM 的 Mysql 驱动
 	mysqlConfig := mysql.Config{
@@ -47,9 +47,9 @@ func GetMysqlDB() *gorm.DB {
 
 // 辅助函数, 用于执行创建数据库的SQL语句
 //
-// @param dsn string: 连接数据库服务器的 DSN
-// @param driver string: 数据库驱动名
-// @param createSql string: 要执行了 `CREATE DATABASE...` 语句
+// dsn string: 连接数据库服务器的 DSN
+// driver string: 数据库驱动名
+// createSql string: 要执行了 `CREATE DATABASE...` 语句
 func CreateDatabase(dsn string, driver string, createSql string) error {
 	// sql.Open 只是验证参数并返回一个 *sql.DB 连接池对象, 并不会直接建立连接
 	db, err := sql.Open(driver, dsn)

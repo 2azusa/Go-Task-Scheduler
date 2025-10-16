@@ -97,7 +97,6 @@ func (j *JobService) SearchJobLog(s *request.ReqJobLogSearch) ([]models.JobLog, 
 	return jobLogs, total, nil
 }
 
-// Get the total number of tasks executed today 1 indicates success 0 indicates failure
 // GetToDayJobExcCount 获取今天执行的任务总数
 func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 	// 查询今天开始时间之后、已结束且执行结果符合条件的任务日志
@@ -111,7 +110,6 @@ func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 	return total, nil
 }
 
-// The number of tasks per day in a certain period of time
 // GetJobExcCount 获取在特定时间段内的每天任务执行数量
 func (j *JobService) GetJobExcCount(start, end int64, success int) ([]resp.DateCount, error) {
 	var dateCount []resp.DateCount

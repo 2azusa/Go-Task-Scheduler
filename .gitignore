@@ -33,7 +33,10 @@ Editor/IDE
 .vscode/
 
 admin/web/
+admin/admin_front
+admin/front
 
+_misc/
 
 
 conf/files/*.json
@@ -56,3 +59,5 @@ node/conf
 package-lock.json
 
 bin
+
+admin/docs
