@@ -54,7 +54,7 @@ build-web:
 
 run-web:
 	@echo "running web..."
-	cd $(WebFile) &&yarn serve
+	cd $(WebFile) &&yarn dev
 
 local-dev: clean install-web
 	@echo "install local dev version"

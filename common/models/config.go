@@ -3,11 +3,11 @@ package models
 import "fmt"
 
 const (
-	PulseNodeTableName   = "node"
-	PulseJobTableName    = "job"
-	PulseJobLogTableName = "job_log"
-	PulseUserTableName   = "user"
-	PulseScriptTableName = "script"
+	PulseNodeTableName   = "nodes"
+	PulseJobTableName    = "jobs"
+	PulseJobLogTableName = "job_logs"
+	PulseUserTableName   = "users"
+	PulseScriptTableName = "scripts"
 )
 
 type (

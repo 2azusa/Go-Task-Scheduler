@@ -1,11 +1,12 @@
 package service
 
 import (
+	"errors"
 	"pulse/admin/internal/model/request"
 	"pulse/common/models"
 	"pulse/common/pkg/dbclient"
-	"pulse/common/pkg/utils"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -17,15 +18,20 @@ var DefaultUserService = new(UserService)
 
 // Login 方法用于用户登陆验证
 func (us *UserService) Login(username, password string) (u *models.User, err error) {
-	// 初始化一个新的User模型实例
 	u = new(models.User)
-	// 从数据库中查询用户
 	err = dbclient.GetMysqlDB().
-		Select("id", "username", "email", "role", "created", "update").        // 指定要查询的字段
-		Table(models.PulseUserTableName).                                      // 指定查询的表
-		Where("username = ? And password = ?", username, utils.MD5(password)). // 添加查询条件
-		Find(u).Error                                                          // 执行查询并将结果填充到u中
-	return // 返回用户对象和错误信息
+		Table(models.PulseUserTableName).
+		Where("username = ?", username).
+		First(u).Error
+	if err != nil {
+		return nil, err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password))
+	if err != nil {
+		return nil, errors.New("incorrect username or password")
+	}
+	return u, nil
 }
 
 // FindByUserName 方法通过用户名查询用户
@@ -42,8 +48,23 @@ func (us *UserService) FindByUserName(username string) (u *models.User, err erro
 
 // ChangePassword 方法用于修改用户密码
 func (us *UserService) ChangePassword(userId int, oldPassword, newPassword string) error {
-	// 在用户表中查找匹配用户ID和旧密码（MD5加密后）的记录，并更新其为新密码（MD5加密后）
-	return dbclient.GetMysqlDB().Table(models.PulseUserTableName).Where("id = ? And password = ?", userId, utils.MD5(oldPassword)).Update("password", utils.MD5(newPassword)).Error
+	var user models.User
+	err := dbclient.GetMysqlDB().Table(models.PulseUserTableName).Where("id = ?", userId).First(&user).Error
+	if err != nil {
+		return err
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(oldPassword))
+	if err != nil {
+		return errors.New("old password is not correct")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	return dbclient.GetMysqlDB().Table(models.PulseUserTableName).Where("id = ?", userId).Update("password", string(hashedPassword)).Error
 }
 
 // Search 方法用于根据条件搜索用户列表
@@ -52,7 +73,7 @@ func (us *UserService) Search(s *request.ReqUserSearch) ([]models.User, int64, e
 	db := dbclient.GetMysqlDB().Table(models.PulseUserTableName)
 
 	if len(s.UserName) > 0 {
-		db = db.Where("username like ?", s.UserName+"%s")
+		db = db.Where("username like ?", s.UserName+"%")
 	}
 	if len(s.Email) > 0 {
 		db.Where("email = ?", s.Email)
@@ -64,7 +85,7 @@ func (us *UserService) Search(s *request.ReqUserSearch) ([]models.User, int64, e
 		db.Where("id = ?", s.ID)
 	}
 	// 初始化一个存放用户的切片
-	users := make([]models.User, 2)
+	users := make([]models.User, 0)
 	var total int64 // 用于存放总记录数的变量
 	// 执行查询以获取总记录数
 	err := db.Count(&total).Error

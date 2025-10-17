@@ -8,10 +8,10 @@ import (
 	"pulse/admin/internal/service"
 	"pulse/common/models"
 	"pulse/common/pkg/logger"
-	"pulse/common/pkg/utils"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // UserRouter 用户路由结构体
@@ -33,7 +33,7 @@ var defaultUserRouter = new(UserRouter)
 // @Router /login [post]
 func (u *UserRouter) Login(c *gin.Context) {
 	var req request.ReqUserLogin
-	// 绑定并验证请求的JSON数据u
+	// 绑定并验证请求的JSON数据
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[user_login] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[user_login] request parameter error", c)
@@ -42,7 +42,6 @@ func (u *UserRouter) Login(c *gin.Context) {
 	// 调用服务层的登录方法验证用户名和密码
 	user, err := service.DefaultUserService.Login(req.UserName, req.Password)
 	if err != nil || user.ID == 0 {
-		logger.GetLogger().Error(fmt.Sprintf("[user_login] db error: %v", err))
 		resp.FailWithMessage(resp.ERROR, "[user_login] username or password is incorrect", c)
 		return
 	}
@@ -96,10 +95,18 @@ func (u *UserRouter) Register(c *gin.Context) {
 	if req.Role == 0 {
 		req.Role = models.RoleNormal
 	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		logger.GetLogger().Error(fmt.Sprintf("[user_register] failed to hash password: %v", err))
+		resp.FailWithMessage(resp.ERROR, "[user_register] failed to hash password", c)
+		return
+	}
+
 	// 创建用户模型实例
 	userModel := &models.User{
 		UserName: req.UserName,
-		Password: utils.MD5(req.Password),
+		Password: string(hashedPassword),
 		Role:     req.Role,
 		Email:    req.Email,
 		Created:  time.Now().Unix(),

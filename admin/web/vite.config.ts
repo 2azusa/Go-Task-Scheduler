@@ -1,0 +1,26 @@
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { componentTagger } from "lovable-tagger";
+
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    // 将端口修改为 5173，避免与后端冲突
+    port: 5173,
+    proxy: {
+      // 将 /api 的请求代理到后端的 8080 端口
+      "/api": {
+        target: "http://localhost:8089",
+        changeOrigin: true,
+      },
+    },
+  },
+  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
+    },
+  },
+}));

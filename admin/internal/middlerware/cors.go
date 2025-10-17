@@ -16,7 +16,7 @@ func Cors() gin.HandlerFunc {
 		// 设置"Access-Control-Allow-Origin"响应头，允许来自指定源的跨域请求
 		c.Header("Access-Control-Allow-Origin", origin)
 		// 设置“Access-Control-Allow-Headers”响应头，指定在实际请求中可以使用的HTTP请求头
-		c.Header("Access-Control-Allow-Headers", "Content-Type, AccessToken, X=CSRF-Token, Authorization, Token,Authorization, X-User-Id")
+		c.Header("Access-Control-Allow-Headers", "Content-Type, AccessToken, X-CSRF-Token, Authorization, Token,Authorization, X-User-Id")
 		// 设置“Access-Control-Allow-Headers"响应头，指定允许的跨域请求方法
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT")
 		// 设置”Access-Control-Expose-Header“响应头，指定哪些响应头可以作为响应的一部分暴露给客户端

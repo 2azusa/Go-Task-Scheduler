@@ -114,7 +114,7 @@ func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 func (j *JobService) GetJobExcCount(start, end int64, success int) ([]resp.DateCount, error) {
 	var dateCount []resp.DateCount
 	// 查询在指定时间段内、已结束且执行结果符合条件的任务，并按天分组计数
-	db := dbclient.GetMysqlDB().Table(models.PulseJobLogTableName).Select("FROM_UNITIME (start_time, '%Y-%m-%d') AS date", "COUNT (*) AS count").Group("date").Order("date ASC").Where("start_time > ? and start_time < ? and end_time != 0 and success = ?", start, end, success)
+	db := dbclient.GetMysqlDB().Table(models.PulseJobLogTableName).Select("FROM_UNIXTIME(start_time, '%Y-%m-%d') AS date", "COUNT(*) AS count").Group("date").Order("date ASC").Where("start_time > ? and start_time < ? and end_time != 0 and success = ?", start, end, success)
 	err := db.Find(&dateCount).Error
 	if err != nil {
 		return nil, err

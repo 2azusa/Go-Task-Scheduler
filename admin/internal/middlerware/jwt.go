@@ -1,3 +1,4 @@
+// It is recommended to migrate from the deprecated `github.com/dgrijalva/jwt-go` to a more modern alternative like `github.com/golang-jwt/jwt/v4`.
 package middlerware
 
 import (
@@ -43,6 +44,7 @@ var control = &singleflight.Group{}
 // NewJWT 用于创建一个JWT操作实例
 func NewJWT() *JWT {
 	return &JWT{
+		// TODO: This is a security risk. The key should be stored in a configuration file or environment variable and should be much more complex.
 		[]byte("S0dEdN9tqG0AAAAHdElNRQfmCgwBDCSd2zTMAAAA"),
 	}
 }
@@ -54,7 +56,7 @@ func (j *JWT) CreateClaims(baseClaims BaseClaims) CustomClaims {
 		BufferTime: 86400,
 		StandardClaims: jwt.StandardClaims{
 			NotBefore: time.Now().Unix() - 1000,
-			ExpiresAt: time.Now().Unix() - 604800,
+			ExpiresAt: time.Now().Unix() + 604800, // 7 days
 			Issuer:    "7szho",
 		},
 	}
