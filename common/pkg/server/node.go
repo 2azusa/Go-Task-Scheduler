@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-
 	"pulse/common/models"
 	"pulse/common/pkg/config"
 	"pulse/common/pkg/dbclient"
@@ -15,20 +14,18 @@ import (
 	"github.com/jessevdk/go-flags"
 )
 
-// NodeOptions 定义了 Node 服务器的命令行启动参数
-var (
-	NodeOptions struct {
-		flags.Options
-		Environment    string `short:"e" long:"env" description:"Use nodeServer environment" default:"testing"`
-		Version        bool   `short:"v" long:"verbose"  description:"Show nodeServer version"`
-		EnablePProfile bool   `short:"p" long:"enable-pprof"  description:"enable pprof"`
-		PProfilePort   int    `short:"d" long:"pprof-port"  description:"pprof port" default:"8188"`
-		ConfigFileName string `short:"c" long:"config" description:"Use nodeServer config file" default:"main"`
-		EnableDevMode  bool   `short:"m" long:"enable-dev-mode"  description:"enable dev mode"`
-	}
-)
+// 节点服务器的命令行启动参数
+var NodeOptions struct {
+	flags.Options
+	Environment    string
+	Version        bool
+	EnablePProfile bool
+	PProfilePort   int
+	ConfigFileName string
+	EnableDevMode  bool
+}
 
-// InitNodeServer 函数用于初始化 Node 服务器
+// 初始化节点服务器
 // 不创建实例，而是初始化所有必要的依赖
 func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) {
 	var parser = flags.NewParser(&NodeOptions, flags.Default)
@@ -39,13 +36,12 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 		return nil, err
 	}
 
-	// 如果指定了版本参数，打印版本并退出
+	// 打印版本信息
 	if NodeOptions.Version {
 		fmt.Printf("%s Version:%s\n", NodeModule, Version)
 		os.Exit(0)
 	}
-
-	// 如果启用 pprof，则在后台启动一个 pprof HTTP 服务器
+	// 启动pprof
 	if NodeOptions.EnablePProfile {
 		go func() {
 			fmt.Printf("enable pprof http server at:%d\n", NodeOptions.PProfilePort)
@@ -78,7 +74,17 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 	mysqlConfig := defaultConfig.Mysql
 	etcdConfig := defaultConfig.Etcd
 	// 初始化日志
-	logger.Init(serverName, logConfig.Level, logConfig.Format, logConfig.Prefix, logConfig.Director, logConfig.ShowLine, logConfig.EncodeLevel, logConfig.StacktraceKey, logConfig.LogInConsole)
+	logger.Init(
+		serverName,
+		logConfig.Level,
+		logConfig.Format,
+		logConfig.Prefix,
+		logConfig.Director,
+		logConfig.ShowLine,
+		logConfig.EncodeLevel,
+		logConfig.StacktraceKey,
+		logConfig.LogInConsole,
+	)
 	// 初始化通知
 	notify.Init(&notify.Mail{
 		Port:     defaultConfig.Email.Port,
@@ -87,33 +93,33 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 		Secret:   defaultConfig.Email.Secret,
 		Nickname: defaultConfig.Email.Nickname,
 	}, &notify.WebHook{
-		Url:  defaultConfig.WebHook.Url,
 		Kind: defaultConfig.WebHook.Kind,
+		Url:  defaultConfig.WebHook.Url,
 	})
 	// 初始化数据库
 	dsn := mysqlConfig.EmptyDsn()
-	createSql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAULT CHARACTER SET utf8mb4 ;", mysqlConfig.Dbname)
+	createSql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAUlt CHARCHTER SET utf8mb4;", mysqlConfig.Dbname)
 	if err := dbclient.CreateDatabase(dsn, "mysql", createSql); err != nil {
-		logger.GetLogger().Error(fmt.Sprintf("create mysql database failed , error:%s", err.Error()))
+		logger.GetLogger().Error(fmt.Sprintf("create mysql database failed, error: %s", err.Error()))
 	}
 	_, err = dbclient.Init(mysqlConfig.Dsn(), mysqlConfig.LogMode, mysqlConfig.MaxIdleConns, mysqlConfig.MaxOpenConns)
 	if err != nil {
-		logger.GetLogger().Error(fmt.Sprintf("node-server:init mysql failed , error:%s", err.Error()))
+		logger.GetLogger().Error(fmt.Sprintf("node-server: init mysql failed, error: %s", err.Error()))
 	} else {
-		logger.GetLogger().Info("node-server:init mysql success")
+		logger.GetLogger().Info("node-server: init mysql success")
 	}
-	// 初始化 Etcd
+	// 初始化Etcd
 	_, err = etcdclient.Init(etcdConfig.Endpoints, etcdConfig.DialTimeout, etcdConfig.ReqTimeout)
 	if err != nil {
-		logger.GetLogger().Error(fmt.Sprintf("node-server:init etcd failed , error:%s", err.Error()))
+		logger.GetLogger().Error(fmt.Sprintf("node-server: init etcd failed, error: %s", err.Error()))
 	} else {
-		logger.GetLogger().Info("node-server:init etcd success")
+		logger.GetLogger().Info("node-server: init etcd success")
 	}
-	// 执行额外的初始化函数
 	if len(inits) > 0 {
 		for _, init := range inits {
 			init()
 		}
 	}
+
 	return defaultConfig, nil
 }

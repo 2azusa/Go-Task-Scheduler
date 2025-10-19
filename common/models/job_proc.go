@@ -6,18 +6,18 @@ import (
 	"time"
 )
 
-// JobProcVal 存储作业进程的状态信息
+// JobProcVal 存储任务进程的状态信息
 type JobProcVal struct {
-	Time   time.Time `json:"time"`    // 开启执行时间
-	Killed bool      `json:"Kiddled"` // 是否强制杀死
+	Time   time.Time `json:"time"`   // 开启执行时间
+	Killed bool      `json:"killed"` // 是否强制杀死
 }
 
-// JobProc 表示一个作业进程，包括其基本信息和状态
+// JobProc 表示一个任务进程，包括其基本信息和状态
 type JobProc struct {
-	ID         int    `json:"id"`        // 作业进程ID
-	JobID      int    `json:"job_id"`    // 关联的作业ID
+	ID         int    `json:"id"`        // 任务进程ID
+	JobID      int    `json:"job_id"`    // 关联的任务ID
 	NodeUUID   string `json:"node_uuid"` // 节点唯一标识
-	JobProcVal        // 作业进程状态
+	JobProcVal        // 任务进程状态
 
 	Running int32          // 运行状态标识
 	Wg      sync.WaitGroup // 用于同步的等待组

@@ -14,45 +14,43 @@ import (
 const ServerName = "node"
 
 func main() {
-	// 1. 初始化节点服务的基础组件
+	// Initialize node server components.
 	if _, err := server.InitNodeServer(ServerName); err != nil {
 		fmt.Println("init node server error:", err.Error())
 		os.Exit(1)
 	}
 
-	// 2. 创建 NodeServer 业务逻辑实例
+	// Create a new NodeServer instance.
 	nodeServer, err := service.NewNodeServer()
 	if err != nil {
 		fmt.Println("init node server error:", err.Error())
 		os.Exit(1)
 	}
 
-	// 3. 初始化数据库表结构
+	// Auto-migrate database tables.
 	service.RegisterTables(dbclient.GetMysqlDB())
 
-	// 4. 将节点注册到 Etcd
-	// 节点通过 Register 将自己的信息写入 Etcd， admin 服务就能发现它，实现了服务的动态上线
+	// Register this node to Etcd for service discovery.
 	if err = nodeServer.Register(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("register node into etcd error:%s", err.Error()))
 		os.Exit(1)
 	}
 
-	// 5. 启用节点的核心运行逻辑
-	// Run 方法会加载分配给本节点的任务，启动 cron 调度器，并开始监听 Etcd 中与任务相关的变化
+	// Run the node server's core logic, including cron scheduler and Etcd watchers.
 	if err = nodeServer.Run(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("node run error: %s", err.Error()))
 		os.Exit(1)
 	}
 
-	// 6. 在后台启动通知服务
+	// Start the notification service in the background.
 	go notify.Serve()
 
 	logger.GetLogger().Info(fmt.Sprintf("pulse node %s service started, Ctrl+C or send kill sign to exit", nodeServer.String()))
 
-	// 7. 设置优雅关闭逻辑
-	event.OnEvent(event.EXIT, nodeServer.Stop) // 设置 “EXIT” 事件的监听器，当事件被触发时，调用 nodeServer.Stop 方法进行清理
-	event.WaitEvent()                          // 阻塞主 goroutine， 直到接收到操作系统的终止信号
-	event.EmitEvent(event.EXIT, nil)           // 接收到信号后，手动触发 “EXIT” 事件
+	// Set up graceful shutdown.
+	event.OnEvent(event.EXIT, nodeServer.Stop) // Call nodeServer.Stop on EXIT event.
+	event.WaitEvent()                          // Block until a termination signal is received.
+	event.EmitEvent(event.EXIT, nil)           // Trigger the EXIT event.
 
 	logger.GetLogger().Info("exit success")
 }

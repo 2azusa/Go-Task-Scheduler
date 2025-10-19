@@ -10,9 +10,8 @@ export default defineConfig(({ mode }) => ({
     // 将端口修改为 5173，避免与后端冲突
     port: 5173,
     proxy: {
-      // 将 /api 的请求代理到后端的 8080 端口
-      "/api": {
-        target: "http://localhost:8089",
+            "/api": {
+        target: "http://localhost:3000",
         changeOrigin: true,
       },
     },

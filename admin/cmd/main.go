@@ -1,8 +1,8 @@
 // @title Go-Task-Scheduler API
 // @version 1.0
 // @description This is the API documentation for the Go-Task-Scheduler project.
-// @host localhost:8080
-// @BasePath /api/v1
+// @host localhost:3000
+// @BasePath /
 
 package main
 

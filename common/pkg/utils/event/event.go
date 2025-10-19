@@ -13,9 +13,7 @@ const (
 	WAIT = "wait"
 )
 
-var (
-	Events = make(map[string][]func(any), 2)
-)
+var Events = make(map[string][]func(any), 2)
 
 func OnEvent(name string, fs ...func(any)) error {
 	evs, ok := Events[name]

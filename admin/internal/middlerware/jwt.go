@@ -1,169 +1,107 @@
-// It is recommended to migrate from the deprecated `github.com/dgrijalva/jwt-go` to a more modern alternative like `github.com/golang-jwt/jwt/v4`.
 package middlerware
 
 import (
 	"errors"
 	"pulse/admin/internal/model/resp"
-	"pulse/common/pkg/logger"
+	"strings"
 	"time"
 
-	"golang.org/x/sync/singleflight"
-
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 )
 
-// JWT载荷的自定义结构体
-type CustomClaims struct {
-	BaseClaims
-	BufferTime int64 // 缓冲信息
-	jwt.StandardClaims
-}
-
-// 基础载荷信息
-type BaseClaims struct {
-	ID       int
-	UserName string
-}
-
-// JWT操作结构体，封装了签名密钥
-type JWT struct {
-	SigningKey []byte
-}
+var JwtKey = []byte("45df45rds4")
 
 var (
-	ErrTokenExpired     = errors.New("token is expired")           // Token已过期
-	ErrTokenNotValidYet = errors.New("token not active yet")       // Token尚未激活
-	ErrTokenMalformed   = errors.New("that's not even a token")    // Token格式错误
-	ErrTokenInvalid     = errors.New("couldn't handle this token") // 无法处理这个Token
+	ErrTokenExpired     = errors.New("token is expired")
+	ErrTokenNotValidYet = errors.New("token not active yet")
+	ErrTokenMalformed   = errors.New("that's not even a token")
+	ErrTokenInvalid     = errors.New("couldn't handle this token")
 )
 
-// 使用singleflight来控制并发
-var control = &singleflight.Group{}
-
-// NewJWT 用于创建一个JWT操作实例
-func NewJWT() *JWT {
-	return &JWT{
-		// TODO: This is a security risk. The key should be stored in a configuration file or environment variable and should be much more complex.
-		[]byte("S0dEdN9tqG0AAAAHdElNRQfmCgwBDCSd2zTMAAAA"),
-	}
+type MyClaims struct {
+	ID       int
+	UserName string
+	jwt.RegisteredClaims
 }
 
-// CreateClaims 用于创建一个自定义的Claims
-func (j *JWT) CreateClaims(baseClaims BaseClaims) CustomClaims {
-	claims := CustomClaims{
-		BaseClaims: baseClaims,
-		BufferTime: 86400,
-		StandardClaims: jwt.StandardClaims{
-			NotBefore: time.Now().Unix() - 1000,
-			ExpiresAt: time.Now().Unix() + 604800, // 7 days
-			Issuer:    "7szho",
+// SetToken
+func SetToken(id int, username string) (string, error) {
+	expireTime := time.Now().Add(24 * time.Hour)
+	claims := MyClaims{
+		id,
+		username,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expireTime),
+			Issuer:    "pulse",
 		},
 	}
-	return claims
-}
 
-// CreateToken 用于根据claims生成一个token字符串
-func (j *JWT) CreateToken(claims CustomClaims) (string, error) {
-	// 使用指定的签名方法来创建签名对象
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	// 使用指定的signingKey进行签名，来获取完整的编码后的字符串
-	return token.SignedString(j.SigningKey)
-}
-
-// CreateTokenByOldToken 使用旧的token换发新的token
-func (j *JWT) CreateTokenByOldToken(oldToken string, claims CustomClaims) (string, error) {
-	// 使用 ”JWT:“ + oldToken 作为isingleflight的key
-	v, err, _ := control.Do("JWT:"+oldToken, func() (interface{}, error) {
-		return j.CreateToken(claims)
-	})
-	return v.(string), err
-}
-
-// ParseToken 用于解析token字符串，返回自定义的Claims
-func (j *JWT) ParseToken(tokenString string) (*CustomClaims, error) {
-	// 使用给定的密钥和Claims结构体来解析token
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaims{}, func(tokne *jwt.Token) (interface{}, error) {
-		return j.SigningKey, nil
-	})
-
-	// 处理解析过程中发生的错误
+	tokenString, err := token.SignedString(JwtKey)
 	if err != nil {
-		// jwt.ValidationError 是一个包含多种错误类型的结构体
-		if ve, ok := err.(*jwt.ValidationError); ok {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// CheckToken
+func CheckToken(tokenString string) (*MyClaims, error) {
+	token, err := jwt.ParseWithClaims(tokenString, &MyClaims{}, func(token *jwt.Token) (any, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, errors.New("非预期的签名算法")
+		}
+		return JwtKey, nil
+	})
+	if err != nil {
+		var ve *jwt.ValidationError
+		if errors.As(err, &ve) {
 			if ve.Errors&jwt.ValidationErrorMalformed != 0 {
 				return nil, ErrTokenMalformed // Token格式错误
 			} else if ve.Errors&jwt.ValidationErrorExpired != 0 {
 				return nil, ErrTokenExpired // Token已过期
-			} else if ve.Errors&jwt.ValidationErrorNotValidYet != 0 {
+			} else if jwt.ValidationErrorNotValidYet != 0 {
 				return nil, ErrTokenNotValidYet // Token尚未激活
-			} else {
-				return nil, ErrTokenInvalid // 其他未知错误
 			}
 		}
+		return nil, ErrTokenInvalid // 无法处理这个Token
 	}
 
-	// 如果token有效
-	if token != nil {
-		if claims, ok := token.Claims.(*CustomClaims); ok && token.Valid {
-			return claims, nil
-		}
-		return nil, ErrTokenInvalid
-	} else {
-		return nil, ErrTokenInvalid
+	if claims, ok := token.Claims.(*MyClaims); ok && token.Valid {
+		return claims, nil
 	}
+
+	return nil, ErrTokenInvalid
 }
 
-// GetClaims  用于从 gin 上下文获取cliams
-func GetClaims(c *gin.Context) (claims *CustomClaims, err error) {
-	token := c.Request.Header.Get("Authorization")
-	j := NewJWT()
-	claims, err = j.ParseToken(token)
-	if err != nil {
-		logger.GetLogger().Error("Failed to obtain parsing information from jwt from Context of Gin. Please check whether Authorization exists in the request header and whether claims is the specified structure.")
-	}
-	return
-}
-
-// GetUserInfo 从Gin的上下文中获取用户信息
-func GetUserInfo(c *gin.Context) *CustomClaims {
-	if claims, exists := c.Get("claims"); !exists {
-		if cl, err := GetClaims(c); err != nil {
-			return nil
-		} else {
-			return cl
-		}
-	} else {
-		waitUse := claims.(*CustomClaims)
-		return waitUse
-	}
-}
-
-// JWTAuth 是一个Gin中间件，用于JWT认证
-func JWTAuth() gin.HandlerFunc {
+// JwtToken
+func JwtToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		// 从请求头获取token
-		token := c.Request.Header.Get("Authorization")
-		if token == "" {
-			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "未登陆或非法登陆", c)
+		tokenHeader := c.Request.Header.Get("Authorization")
+		if tokenHeader == "" {
+			// c.JSON(http.StatusUnauthorized, gin.H{"error": "请求未携带token"})
+			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "请求未携带token", c)
 			c.Abort()
 			return
 		}
-		// 创建JWT实例并解析token
-		j := NewJWT()
-		claims, err := j.ParseToken(token)
+
+		parts := strings.SplitN(tokenHeader, " ", 2)
+		if len(parts) != 2 || parts[0] != "Bearer" {
+			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "token格式不正确", c)
+			c.Abort()
+			return
+		}
+
+		claims, err := CheckToken(parts[1])
 		if err != nil {
-			if err == ErrTokenExpired {
-				resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "授权已过期", c)
-				c.Abort()
-				return
-			}
-			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, err.Error(), c)
+			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "无效的token", c)
 			c.Abort()
 			return
 		}
-		// 将解析出的claims存入Gin的上下文中
-		c.Set("cliams", claims)
-		c.Next() // 调用下一个处理函数
+
+		c.Set("userID", claims.ID)
+		c.Set("username", claims.UserName)
+		c.Next()
 	}
 }

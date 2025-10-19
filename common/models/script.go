@@ -8,7 +8,6 @@ import (
 	"strings"
 )
 
-// Preset Script
 // Script 结构体定义了预设脚本的数据模型
 type Script struct {
 	ID      int    `json:"id" gorm:"column:id;primary_key:auto_increment"`                                     // 脚本ID

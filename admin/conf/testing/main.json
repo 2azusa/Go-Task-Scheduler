@@ -13,7 +13,7 @@
   },
   "system": {
     "env": "testing",
-    "addr": 8089,
+    "addr": 3000,
     "#node-timeout": "Node registration timeout, in seconds",
     "node-ttl": 5,
     "#job-proc-ttl": "The unit is second",

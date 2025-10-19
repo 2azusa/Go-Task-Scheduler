@@ -3,19 +3,55 @@ package notify
 import (
 	"bytes"
 	"fmt"
+	"html/template"
 	"pulse/common/pkg/logger"
-	"text/template"
 
 	"github.com/go-gomail/gomail"
 )
 
-// 定义通知类型的常量
-const (
-	NotifyTypeMail    = 1
-	NotifyTypeWebHook = 2
-)
+var _defaultMail *Mail
 
-// 字符串变量, 存储了邮件的 HTML 模板
+type Mail struct {
+	Port     int
+	From     string
+	Host     string
+	Secret   string
+	Nickname string
+}
+
+// SendMsg 方法用于发送一封邮件
+func (mail *Mail) SendMsg(msg *Message) {
+	m := gomail.NewMessage()
+
+	m.SetHeader("From", m.FormatAddress(_defaultMail.From, _defaultMail.Nickname))
+	m.SetHeader("To", msg.To...)
+	m.SetHeader("Subject", msg.Subject)
+	msgData := parseMailTemplate(msg) // 将模板和数据数据，生成HTML邮件正文
+	m.SetBody("text/html", msgData)
+
+	d := gomail.NewDialer(_defaultMail.Host, _defaultMail.Port, _defaultMail.From, _defaultMail.Secret)
+	// 连接到SMTP服务器并发送邮件
+	if err := d.DialAndSend(m); err != nil {
+		logger.GetLogger().Warn(fmt.Sprintf("smtp send msg[%+v] err: %s", msg, err.Error()))
+	}
+}
+
+// 解析邮件模板并填充邮件
+func parseMailTemplate(msg *Message) string {
+	tmpl, err := template.New("notify").Parse(mailTemplate)
+	if err != nil {
+		return fmt.Sprintf("Failed to parse the notification template error: %s", err.Error())
+	}
+
+	var buf bytes.Buffer
+	err = tmpl.Execute(&buf, msg)
+	if err != nil {
+		return fmt.Sprintf("Failed to parse the notification template execute error: %s", err.Error())
+	}
+	return buf.String()
+}
+
+// 存储了邮件的HTML模板
 var mailTemplate = `
 <!DOCTYPE html>
 <html lang="en">
@@ -70,58 +106,3 @@ var mailTemplate = `
 </body>
 </html>
 `
-
-// 一个包级别的私有变量, 用于存储默认的 Mail 配置
-var _defaultMail *Mail
-
-// 定义了发送邮件所需的 SMTP 服务器配置信息
-type Mail struct {
-	Port     int
-	From     string
-	Host     string
-	Secret   string
-	Nickname string
-}
-
-// SendMsg 方法用于发送一封邮件, 实现了 Noticer 接口
-// msg: 一个指向 Message 结构体的指针
-func (mail *Mail) SendMsg(msg *Message) {
-	// 创建一个新的 gomail 消息对象
-	m := gomail.NewMessage()
-
-	// 设置邮件头 "From"(发件人), 并使用 FormatAddress 添加昵称
-	m.SetHeader("From", m.FormatAddress(_defaultMail.From, _defaultMail.Nickname)) //这种方式可以添加别名，即“XX官方”
-	// 设置邮件头 "To"(收件人)
-	m.SetHeader("To", msg.To...)
-	// 设置邮件主题
-	m.SetHeader("Subject", msg.Subject)
-	// 调用 parseMailTemplate 函数, 将模板和数据结合, 生成 HTML 邮件正文
-	msgData := parseMailTemplate(msg)
-
-	// 设置邮件正文, 并指定内容类型为 "text/html"
-	m.SetBody("text/html", msgData)
-
-	// 创建一个 Dialer 对象
-	d := gomail.NewDialer(_defaultMail.Host, _defaultMail.Port, _defaultMail.From, _defaultMail.Secret)
-	// 连接到 SMTP 服务器并发送邮件
-	if err := d.DialAndSend(m); err != nil {
-		logger.GetLogger().Warn(fmt.Sprintf("smtp send msg[%+v] err: %s", msg, err.Error()))
-	}
-}
-
-// parseMailTemplate 函数封装解析邮件模板并填充邮件
-// msg: 包含模板所需数据的 Message 对象
-// 返回值: 填充数据后生成的最终 HTML 字符串
-func parseMailTemplate(msg *Message) string {
-	tmpl, err := template.New("notify").Parse(mailTemplate)
-	if err != nil {
-		return fmt.Sprintf("Failed to parse the notification template error: %s", err.Error())
-	}
-
-	var buf bytes.Buffer
-	err = tmpl.Execute(&buf, msg)
-	if err != nil {
-		return fmt.Sprintf("Failed to parse the notification template execute error: %s", err.Error())
-	}
-	return buf.String()
-}
