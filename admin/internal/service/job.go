@@ -110,7 +110,7 @@ func (j *JobService) GetTodayJobExcCount(success int) (int64, error) {
 	return total, nil
 }
 
-// GetJobExcCount 获取在特定时间段内的每天任务执行数量
+// GetJobExcCount 获取在指定时间段内的每天任务执行数量
 func (j *JobService) GetJobExcCount(start, end int64, success int) ([]resp.DateCount, error) {
 	var dateCount []resp.DateCount
 	// 查询在指定时间段内、已结束且执行结果符合条件的任务，并按天分组计数
@@ -181,7 +181,7 @@ func (j *JobService) AutoAllocateNode() string {
 	return resultNodeUUID
 }
 
-// Once 用于标记一个任务在特定节点上执行一次
+// Once 用于标记一个任务在指定节点上执行一次
 func (j *JobService) Once(once *request.ReqJobOnce) (err error) {
 	//The default existence time is 60 seconds
 	_, err = etcdclient.PutWithTtl(fmt.Sprintf(etcdclient.KeyEtcdOnce, once.JobId), once.NodeUUID, 60)

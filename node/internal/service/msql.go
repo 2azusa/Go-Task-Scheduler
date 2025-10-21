@@ -6,7 +6,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// RegisterTables performs auto-migration for database tables.
+// RegisterTables 执行数据库表的自动迁移
 func RegisterTables(db *gorm.DB) {
 	_ = db.AutoMigrate(
 		models.User{},

@@ -24,7 +24,7 @@ const Logs = () => {
   const loadLogs = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.getJobLogs({ page, page_size: 10 });
+      const response = await api.getJobLogs({ page, pageSize: 10 });
       if (response.code === 200) {
         setLogs(response.data.list || []);
         setTotal(response.data.total);
@@ -86,14 +86,14 @@ const Logs = () => {
                   logs.map((log) => (
                     <TableRow key={log.id}>
                       <TableCell>{log.id}</TableCell>
-                      <TableCell>{log.job_id}</TableCell>
+                      <TableCell>{log.jobId}</TableCell>
                       <TableCell>{log.name}</TableCell>
                       <TableCell className="max-w-md truncate font-mono text-sm">
                         {log.output}
                       </TableCell>
                       <TableCell>{getStatusBadge(log.success)}</TableCell>
                       <TableCell>
-                        {new Date(log.start_time * 1000).toLocaleString()}
+                        {new Date(log.startTime * 1000).toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))

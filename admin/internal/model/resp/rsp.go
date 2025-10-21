@@ -11,7 +11,7 @@ type (
 		List     any   `json:"list"`
 		Total    int64 `json:"total"`
 		Page     int   `json:"page"`
-		PageSize int   `json:"page_size"`
+		PageSize int   `json:"pageSize"`
 	}
 	Response struct {
 		Code int    `json:"code"`

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,14 +24,29 @@ const Jobs = () => {
   const [total, setTotal] = useState(0);
   const [editingJob, setEditingJob] = useState<Partial<Job> | null>(null);
 
-  useEffect(() => {
-    loadJobs();
-  }, [page]);
+  // useEffect(() => {
+  //   loadJobs();
+  // }, [page]);
 
-  const loadJobs = async () => {
+  // const loadJobs = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const response = await api.searchJobs({ page, pageSize: 10 });
+  //     if (response.code === 200) {
+  //       setJobs(response.data.list || []);
+  //       setTotal(response.data.total);
+  //     }
+  //   } catch (error) {
+  //     toast.error("加载任务列表失败");
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const loadJobs = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await api.searchJobs({ page, page_size: 10 });
+      const response = await api.searchJobs({ page, pageSize: 10 });
       if (response.code === 200) {
         setJobs(response.data.list || []);
         setTotal(response.data.total);
@@ -41,7 +56,10 @@ const Jobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [page]);
+  useEffect(() => {
+    loadJobs();
+  }, [loadJobs]);
 
   const handleDelete = async (id: number) => {
     try {
@@ -116,11 +134,11 @@ const Jobs = () => {
                     <TableRow key={job.id}>
                       <TableCell>{job.id}</TableCell>
                       <TableCell className="font-medium">{job.name}</TableCell>
-                      <TableCell>{getJobTypeLabel(job.job_type)}</TableCell>
+                      <TableCell>{getJobTypeLabel(job.jobType)}</TableCell>
                       <TableCell className="font-mono text-sm">{job.spec}</TableCell>
                       <TableCell>{getStatusBadge(job.status)}</TableCell>
                       <TableCell className="text-sm text-muted-foreground">
-                        {job.run_on || "自动分配"}
+                        {job.runOn || "自动分配"}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-2">

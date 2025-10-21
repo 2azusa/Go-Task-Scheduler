@@ -7,7 +7,6 @@ import (
 	"pulse/admin/internal/service"
 	"pulse/common/models"
 	"pulse/common/pkg/logger"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -17,9 +16,8 @@ type ScriptRouter struct{}
 
 var defaultScriptRouter = new(ScriptRouter)
 
-// CreateOrUpdate 用于创建或更新脚本
-// @Summary Create or update a script
-// @Description Creates a new script or updates an existing one.
+// @Summary 创建或更新脚本
+// @Description 创建新脚本或更新现有脚本
 // @Tags script
 // @Accept  json
 // @Produce  json
@@ -29,36 +27,55 @@ var defaultScriptRouter = new(ScriptRouter)
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /script/add [post]
 func (s *ScriptRouter) CreateOrUpdate(c *gin.Context) {
-	var req models.Script
+	// var req models.Script
+	// if err := c.ShouldBindJSON(&req); err != nil {
+	// 	logger.GetLogger().Error(fmt.Sprintf("[create_script] request parameter error: %s", err.Error()))
+	// 	resp.FailWithMessage(resp.ErrorRequestParameter, "[creata_script] requestparameter error", c)
+	// 	return
+	// }
+	// var err error
+	// t := time.Now()
+	// if req.ID > 0 {
+	// 	req.Updated = t.Unix()
+	// 	err = req.Update()
+	// 	if err != nil {
+	// 		logger.GetLogger().Error(fmt.Sprintf("[update_script] into db error: %s", err.Error()))
+	// 		resp.FailWithMessage(resp.ERROR, "[update_script] into db id error", c)
+	// 		return
+	// 	}
+	// } else {
+	// 	req.Created = t.Unix()
+	// 	_, err = req.Insert()
+	// 	if err != nil {
+	// 		logger.GetLogger().Error(fmt.Sprintf("[create_script] insert script into db error: %s", err.Error()))
+	// 		resp.FailWithMessage(resp.ERROR, "[create_script] insert script into db error", c)
+	// 		return
+	// 	}
+	// }
+
+	var req request.ReqScriptUpdate
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[create_script] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[creata_script] requestparameter error", c)
 		return
 	}
-	var err error
-	t := time.Now()
-	if req.ID > 0 {
-		req.Updated = t.Unix()
-		err = req.Update()
-		if err != nil {
-			logger.GetLogger().Error(fmt.Sprintf("[update_script] into db error: %s", err.Error()))
-			resp.FailWithMessage(resp.ERROR, "[update_script] into db id error", c)
-			return
-		}
+
+	if req.ID == nil {
+		// 新建
 	} else {
-		req.Created = t.Unix()
-		_, err = req.Insert()
-		if err != nil {
-			logger.GetLogger().Error(fmt.Sprintf("[create_script] insert script into db error: %s", err.Error()))
-			resp.FailWithMessage(resp.ERROR, "[create_script] insert script into db error", c)
-			return
-		}
+		// 跟新
+	}
+	err := service.DefaultScriptService.Update(&req)
+	if err != nil {
+		logger.GetLogger().Error(fmt.Sprintf("[create_script] insert script into db error: %s", err.Error()))
+		resp.FailWithMessage(resp.ERROR, "[create_script] insert script into db error", c)
+		return
 	}
 	resp.OkWithDetailed(req, "operate success", c)
 }
 
-// @Summary Delete scripts
-// @Description Deletes one or more scripts by their IDs.
+// @Summary 删除脚本
+// @Description 根据ID删除一个或多个脚本
 // @Tags script
 // @Accept  json
 // @Produce  json
@@ -90,8 +107,8 @@ func (s *ScriptRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// @Summary Find a script by ID
-// @Description Retrieves the details of a single script by its ID.
+// @Summary 根据ID查找脚本
+// @Description 根据脚本ID检索单个脚本的详细信息
 // @Tags script
 // @Produce  json
 // @Param   id query int true "Script ID"
@@ -101,7 +118,7 @@ func (s *ScriptRouter) Delete(c *gin.Context) {
 // @Router /script/find [get]
 func (s *ScriptRouter) FindById(c *gin.Context) {
 	var req request.ByID
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[find_script] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[find_script] request parameter error", c)
 		return
@@ -109,6 +126,15 @@ func (s *ScriptRouter) FindById(c *gin.Context) {
 	script := models.Script{ID: req.ID}
 	err := script.FindById()
 	if err != nil {
+		// if errors.Is(err, gorm.ErrRecordNotFound) {
+		// 	logger.GetLogger().Info(fmt.Sprintf("[find_script] 未找到 ID 为 %d 的脚本", req.ID))
+		// 	// 以 404 Not Found 状态码响应
+		// 	c.JSON(http.StatusNotFound, gin.H{
+		// 		"code": 404,
+		// 		"msg":  fmt.Sprintf("未找到 ID 为 %d 的脚本", req.ID),
+		// 	})
+		// 	return
+		// }
 		logger.GetLogger().Error(fmt.Sprintf("[find_script] find script by id: %d error: %s", req.ID, err.Error()))
 		resp.FailWithMessage(resp.ERROR, "[find_script] find script by id error", c)
 		return
@@ -116,8 +142,8 @@ func (s *ScriptRouter) FindById(c *gin.Context) {
 	resp.OkWithDetailed(script, "find success", c)
 }
 
-// @Summary Search for scripts
-// @Description Searches for scripts based on specified criteria.
+// @Summary 搜索脚本
+// @Description 根据指定条件搜索脚本
 // @Tags script
 // @Accept  json
 // @Produce  json

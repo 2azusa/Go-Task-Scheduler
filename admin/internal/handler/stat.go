@@ -17,12 +17,10 @@ import (
 // StatRouter 定义了统计相关的路由
 type StatRouter struct{}
 
-// defaultStatRouter 是StatRouter的默认实例
 var defaultStatRouter = new(StatRouter)
 
-// GetTodayStatistics 获取当日的统计数据
-// @Summary Get today's statistics
-// @Description Retrieves statistics for the current day, including node counts and job execution counts.
+// @Summary 获取当日的统计数据
+// @Description 获取当天的统计数据，包括节点数和任务执行数
 // @Tags statis
 // @Produce  json
 // @Success 200 {object} resp.RspSystemStatistics "Today's statistics"
@@ -58,8 +56,8 @@ func (s *StatRouter) GetTodayStatistics(c *gin.Context) {
 	}, "ok", c)
 }
 
-// @Summary Get weekly statistics
-// @Description Retrieves job execution statistics for the last 7 days.
+// @Summary 获取每周统计数据
+// @Description 检索过去7天的任务执行统计数据
 // @Tags statis
 // @Produce  json
 // @Success 200 {object} resp.RspDateCount "Weekly statistics"
@@ -81,8 +79,8 @@ func (s *StatRouter) GetWeekStatistics(c *gin.Context) {
 	}, "ok", c)
 }
 
-// @Summary Get system information
-// @Description Retrieves system information for the admin server or a specific worker node.
+// @Summary 获取系统信息
+// @Description 检索管理服务器或指定工作节点的系统信息
 // @Tags statis
 // @Produce  json
 // @Param   uuid query string false "Node UUID"
@@ -92,7 +90,7 @@ func (s *StatRouter) GetWeekStatistics(c *gin.Context) {
 // @Router /statis/system [get]
 func (s *StatRouter) GetSystemInfo(c *gin.Context) {
 	var req request.ByUUID
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[get_system_info] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[get_system_info] request parameter error", c)
 		return

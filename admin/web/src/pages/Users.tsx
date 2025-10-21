@@ -25,7 +25,7 @@ const Users = () => {
   const loadUsers = async () => {
     setLoading(true);
     try {
-      const response = await api.searchUsers({ page: 1, page_size: 100 });
+      const response = await api.searchUsers({ page: 1, pageSize: 100 });
       if (response.code === 200) {
         setUsers(response.data.list || []);
       }

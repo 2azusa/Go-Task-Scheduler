@@ -11,11 +11,11 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { api } from "@/lib/api";
-import { Node } from "@/types/api";
+import { NodeSearchResult } from "@/types/api";
 import { toast } from "sonner";
 
 const Nodes = () => {
-  const [nodes, setNodes] = useState<Node[]>([]);
+  const [nodes, setNodes] = useState<NodeSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -25,7 +25,7 @@ const Nodes = () => {
   const loadNodes = async () => {
     setLoading(true);
     try {
-      const response = await api.searchNodes({ page: 1, page_size: 100 });
+      const response = await api.searchNodes({ page: 1, pageSize: 100 });
       if (response.code === 200) {
         setNodes(response.data.list || []);
       }
@@ -44,6 +44,7 @@ const Nodes = () => {
   };
 
   const formatUptime = (timestamp: number) => {
+    if (!timestamp) return "N/A";
     const hours = Math.floor((Date.now() / 1000 - timestamp) / 3600);
     const days = Math.floor(hours / 24);
     if (days > 0) return `${days}天`;
@@ -89,15 +90,15 @@ const Nodes = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  nodes.map((node) => (
-                    <TableRow key={node.id}>
-                      <TableCell>{getStatusBadge(node.status)}</TableCell>
-                      <TableCell className="font-medium">{node.hostname}</TableCell>
-                      <TableCell>{node.ip}</TableCell>
-                      <TableCell className="font-mono text-sm">{node.uuid}</TableCell>
-                      <TableCell>{node.version}</TableCell>
-                      <TableCell>{formatUptime(node.up)}</TableCell>
-                      <TableCell className="text-right">{node.job_count}</TableCell>
+                  nodes.map((item) => (
+                    <TableRow key={item.node.id}>
+                      <TableCell>{getStatusBadge(item.node.status)}</TableCell>
+                      <TableCell className="font-medium">{item.node.hostname}</TableCell>
+                      <TableCell>{item.node.ip}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.node.uuid}</TableCell>
+                      <TableCell>{item.node.version}</TableCell>
+                      <TableCell>{formatUptime(item.node.up)}</TableCell>
+                      <TableCell className="text-right">{item.jobCount}</TableCell>
                     </TableRow>
                   ))
                 )}

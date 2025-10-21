@@ -13,7 +13,7 @@ import (
 	"go.etcd.io/etcd/api/v3/mvccpb"
 )
 
-// watchJobs watches for job changes (create, update, delete) for the current node.
+// watchJobs 监视当前节点的任务更改（创建、更新、删除）
 func (srv *NodeServer) watchJobs() {
 	rch := handler.WatchJobs(srv.UUID)
 	for wresp := range rch {
@@ -45,7 +45,7 @@ func (srv *NodeServer) watchJobs() {
 	}
 }
 
-//fixme kill executing job
+//fixme 杀死正在执行的任务
 /*
 func (srv *NodeServer) watchKilledProc() {
 	rch := handler.WatchProc(srv.UUID)
@@ -77,7 +77,7 @@ func (srv *NodeServer) watchKilledProc() {
 	}
 }*/
 
-// watchSystemInfo watches for requests to get system information.
+// watchSystemInfo 监视获取系统信息的请求
 func (srv *NodeServer) watchSystemInfo() {
 	rch := handler.WatchSystem(srv.UUID)
 	for wresp := range rch {
@@ -99,7 +99,7 @@ func (srv *NodeServer) watchSystemInfo() {
 					logger.GetLogger().Error(fmt.Sprintf("get system info from node[%s] json marshal error: %s", srv.UUID, err.Error()))
 					continue
 				}
-				// Write the system info to another etcd key with a short TTL for the admin to read.
+				// 将系统信息写入另一个具有较短 TTL 的 etcd 键，以供管理员读取
 				_, err = etcdclient.PutWithTtl(fmt.Sprintf(etcdclient.KeyEtcdSystemGet, getUUID(key)), string(b), 5*60)
 				if err != nil {
 					logger.GetLogger().Error(fmt.Sprintf("get system info from node[%s] etcd put error: %s", srv.UUID, err.Error()))
@@ -111,7 +111,7 @@ func (srv *NodeServer) watchSystemInfo() {
 	}
 }
 
-// getUUID is a helper function to extract the UUID from an etcd key path.
+// getUUID 是一个辅助函数，用于从 etcd 键路径中提取 UUID
 func getUUID(key string) string {
 	index := strings.LastIndex(key, "/")
 	if index == -1 {
@@ -120,7 +120,7 @@ func getUUID(key string) string {
 	return key[index+1:]
 }
 
-// watchOnce watches for one-time job execution triggers.
+// watchOnce 监视一次性任务执行触发器
 func (srv *NodeServer) watchOnce() {
 	rch := handler.WatchOnce()
 	for wresp := range rch {

@@ -14,13 +14,13 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-// JobProc represents information about a running job process.
+// JobProc 有关正在运行的任务进程的信息
 type JobProc struct {
 	*models.JobProc
 }
 
-// GetProcFromKey parses JobProc information from an etcd key.
-// The expected key format is: /pulse/proc/{nodeUUID}/{jobId}/{procId}
+// GetProcFromKey 从 etcd key 中解析 JobProc 信息
+// /pulse/proc/{nodeUUID}/{jobId}/{procId}
 func GetProcFromKey(key string) (proc *JobProc, err error) {
 	ss := strings.Split(key, "/")
 	var sslen = len(ss)
@@ -46,20 +46,20 @@ func GetProcFromKey(key string) (proc *JobProc, err error) {
 	return
 }
 
-// Key generates a unique etcd key for the JobProc instance.
+// Key 为 JobProc 实例生成唯一的 etcd key
 func (p *JobProc) Key() string {
 	return fmt.Sprintf(etcdclient.KeyEtcdProc, p.NodeUUID, p.JobID, p.ID)
 }
 
-// del deletes the process key from etcd.
+// del 从 etcd 中删除进程的 key
 func (p *JobProc) del() error {
 	_, err := etcdclient.Delete(p.Key())
 	return err
 }
 
-// Start registers a running process in etcd. It is thread-safe.
+// Start 从 etcd 中注册一个正在运行的进程，这是线程安全的
 func (p *JobProc) Start() error {
-	// Use atomic operation to ensure Start is executed only once.
+	// 使用原子操作确保Start只执行一次
 	if !atomic.CompareAndSwapInt32(&p.Running, 0, 1) {
 		return nil
 	}
@@ -72,8 +72,8 @@ func (p *JobProc) Start() error {
 		return err
 	}
 
-	// Write process info to etcd with a TTL. This acts as a heartbeat mechanism.
-	// If the node crashes, the key will expire and be automatically deleted by etcd.
+	// 使用 TTL 将进程信息写入 etcd，这充当了心跳机制
+	// 如果节点崩溃，key 将过期并被 etcd 自动删除
 	_, err = etcdclient.PutWithTtl(p.Key(), string(b), config.GetConfigModels().System.JobProcTtl)
 	if err != nil {
 		return err
@@ -81,17 +81,17 @@ func (p *JobProc) Start() error {
 	return nil
 }
 
-// Stop stops tracking the process and cleans up its record from etcd. It is thread-safe.
+// Stop 停止跟踪进程并从 etcd 中清理其记录，这是线程安全的
 func (p *JobProc) Stop() {
 	if p == nil {
 		return
 	}
-	// Use atomic operation to ensure Stop is executed only once.
+	// 使用原子操作确保 Stop 只执行一次
 	if !atomic.CompareAndSwapInt32(&p.Running, 1, 0) {
 		return
 	}
 
-	// Wait for any pending etcd operations to complete.
+	// 等待待处理的 etcd 操作完成
 	p.Wg.Wait()
 
 	if err := p.del(); err != nil {
@@ -99,7 +99,7 @@ func (p *JobProc) Stop() {
 	}
 }
 
-// WatchProc creates an etcd watch channel for all process changes on a specific node.
+// WatchProc 为指定节点上的所有进程变化创建一个 etcd 监视通道
 func WatchProc(nodeUUID string) clientv3.WatchChan {
 	keyPrefix := fmt.Sprintf(etcdclient.KeyEtcdNodeProcProfile, nodeUUID)
 	return etcdclient.Watch(keyPrefix, clientv3.WithPrefix())

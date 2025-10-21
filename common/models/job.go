@@ -36,29 +36,29 @@ type Job struct {
 	Command string `json:"command" gorm:"type:text;column:command;not null" binding:"required"`            // 执行命令
 	// 预设脚本ID
 	ScriptID      []byte `json:"-" gorm:"size:256;column:script_id;default:null"` // 脚本ID（字节数组）
-	ScriptIDArray []int  `json:"script_id" gorm:"-"`                              // 脚本ID数组
+	ScriptIDArray []int  `json:"scriptId" gorm:"-"`                               // 脚本ID数组
 	// 任务执行超时时间设置，大于0时生效
 	Timeout int64 `json:"timeout" gorm:"size:13;column:timeout;default:0"` // 超时时间
 	// 任务执行失败重试次数，默认0
-	RetryTimes int `json:"retry_times" gorm:"size:4,column:retry_times;default:0"` // 重试次数
+	RetryTimes int `json:"retryTimes" gorm:"size:4,column:retry_times;default:0"` // 重试次数
 	// 任务执行失败重试间隔，单位秒，小于0时立即重试
-	RetryInterval int64   `json:"retry_interval" gorm:"size:10;column:retry_interval;default:0"`   // 重试间隔
-	Type          JobType `json:"job_type" gorm:"size:1;column:type;not null;" binding:"required"` // 任务类型
-	HttpMethod    int     `json:"http_method" gorm:"size:1;column:http_method"`                    // HTTP方法
-	NotifyType    int     `json:"notify_type" gorm:"size:1;column:notify_type;not null"`           // 通知类型
+	RetryInterval int64   `json:"retryInterval" gorm:"size:10;column:retry_interval;default:0"`   // 重试间隔
+	Type          JobType `json:"jobType" gorm:"size:1;column:type;not null;" binding:"required"` // 任务类型
+	HttpMethod    int     `json:"httpMethod" gorm:"size:1;column:http_method"`                    // HTTP方法
+	NotifyType    int     `json:"notifyType" gorm:"size:1;column:notify_type;not null"`           // 通知类型
 	// 是否分配节点
 	Status        int    `json:"status" gorm:"size:1;column:status;not null;default:0;index:idx_job_status"` // 状态
 	NotifyTo      []byte `json:"-" gorm:"size:256;column:notify_to;default:null"`                            // 通知对象（字节数组）
-	NotifyToArray []int  `json:"notify_to" gorm:"-"`                                                         // 通知对象数组
+	NotifyToArray []int  `json:"notifyTo" gorm:"-"`                                                          // 通知对象数组
 	Spec          string `json:"spec" gorm:"size:64;column:spec;not null"`                                   // 定时表达式
-	RunOn         string `json:"run_on" gorm:"size:128;column:run_on;index:idx_job_run_on;"`                 // 运行节点
+	RunOn         string `json:"runOn" gorm:"size:128;column:run_on;index:idx_job_run_on;"`                  // 运行节点
 	Note          string `json:"note" gorm:"size:512;column:note;default:''"`                                // 备注
 	Created       int64  `json:"created" gorm:"column:created;not null"`                                     // 创建时间
 	Updated       int64  `json:"updated" gorm:"column:updated;default:0"`                                    // 更新时间
 
-	Hostname string   `json:"host_name" gorm:"-"` // 主机名
-	Ip       string   `json:"ip" gorm:"-"`        // IP地址
-	Cmd      []string `json:"cmd" gorm:"-"`       // 命令参数数组
+	Hostname string   `json:"hostname" gorm:"-"` // 主机名
+	Ip       string   `json:"ip" gorm:"-"`       // IP地址
+	Cmd      []string `json:"cmd" gorm:"-"`      // 命令参数数组
 }
 
 // 初始化节点信息

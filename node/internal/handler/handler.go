@@ -4,7 +4,7 @@ import "pulse/common/models"
 
 // Handler is an interface that defines the methods that all concrete task handlers must implement.
 type Handler interface {
-	// Run executes a task and returns the result and an error.
+	// Run 执行一个任务
 	Run(job *Job) (string, error)
 }
 

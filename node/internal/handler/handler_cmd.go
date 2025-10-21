@@ -10,10 +10,10 @@ import (
 	"time"
 )
 
-// CMDHandler handles the execution of command-line jobs.
+// CMDHandler 处理基于命令行的任务的执行
 type CMDHandler struct{}
 
-// Run executes a command-line job.
+// Run 执行一个命令行任务
 func (c *CMDHandler) Run(job *Job) (result string, err error) {
 	var (
 		cmd  *exec.Cmd
@@ -66,7 +66,7 @@ func (c *CMDHandler) Run(job *Job) (result string, err error) {
 	return b.String(), nil
 }
 
-// RunPresetScript executes a preset script.
+// RunPresetScript 执行一个预设的脚本
 func RunPresetScript(script *models.Script) (result string, err error) {
 	cmd := exec.Command(script.Cmd[0], script.Cmd[1:]...)
 

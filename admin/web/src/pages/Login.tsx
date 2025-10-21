@@ -10,8 +10,10 @@ import { api } from "@/lib/api";
 import { Calendar } from "lucide-react";
 
 const Login = () => {
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // 用于页面跳转
+  // 登录表单状态
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
+  // 注册表单状态
   const [registerForm, setRegisterForm] = useState({
     username: "",
     password: "",
@@ -19,9 +21,10 @@ const Login = () => {
   });
   const [loading, setLoading] = useState(false);
 
+  // 登录提交处理函数
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
+    e.preventDefault(); // 阻止表单默认提交
+    setLoading(true); // 开始加载
     try {
       const response = await api.login(loginForm);
       if (response.code === 200) {
@@ -38,10 +41,12 @@ const Login = () => {
     }
   };
 
+  // 注册提交处理函数
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
+      // 
       const response = await api.register(registerForm);
       if (response.code === 200) {
         toast.success("注册成功，请登录");

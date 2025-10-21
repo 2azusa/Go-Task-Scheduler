@@ -14,40 +14,40 @@ import (
 const ServerName = "node"
 
 func main() {
-	// Initialize node server components.
+	// 1. 初始化NodeServer组件
 	if _, err := server.InitNodeServer(ServerName); err != nil {
 		fmt.Println("init node server error:", err.Error())
 		os.Exit(1)
 	}
 
-	// Create a new NodeServer instance.
+	// 2. 创建NodeServer实例
 	nodeServer, err := service.NewNodeServer()
 	if err != nil {
 		fmt.Println("init node server error:", err.Error())
 		os.Exit(1)
 	}
 
-	// Auto-migrate database tables.
+	// 3. 自动迁移数据库表
 	service.RegisterTables(dbclient.GetMysqlDB())
 
-	// Register this node to Etcd for service discovery.
+	// 4. 将此节点注册到 Etcd 以进行服务发现
 	if err = nodeServer.Register(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("register node into etcd error:%s", err.Error()))
 		os.Exit(1)
 	}
 
-	// Run the node server's core logic, including cron scheduler and Etcd watchers.
+	// 5. 运行节点服务器的核心逻辑，包括 cron 调度程序和 Etcd 观察器
 	if err = nodeServer.Run(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("node run error: %s", err.Error()))
 		os.Exit(1)
 	}
 
-	// Start the notification service in the background.
+	// 6. 在后台启动通知服务
 	go notify.Serve()
 
 	logger.GetLogger().Info(fmt.Sprintf("pulse node %s service started, Ctrl+C or send kill sign to exit", nodeServer.String()))
 
-	// Set up graceful shutdown.
+	// 7. 设置正常关机
 	event.OnEvent(event.EXIT, nodeServer.Stop) // Call nodeServer.Stop on EXIT event.
 	event.WaitEvent()                          // Block until a termination signal is received.
 	event.EmitEvent(event.EXIT, nil)           // Trigger the EXIT event.

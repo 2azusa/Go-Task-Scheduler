@@ -12,7 +12,7 @@ type (
 		UserName string `json:"username"`
 		Email    string `json:"email"`
 		Role     int    `json:"role"`
-		Status   int    `json:"statues"`
+		Status   int    `json:"status"`
 		Created  int64  `json:"created"`
 		Updated  int64  `json:"updated"`
 	}

@@ -30,7 +30,7 @@ const Scripts = () => {
   const loadScripts = async () => {
     setLoading(true);
     try {
-      const response = await api.searchScripts({ page: 1, page_size: 100 });
+      const response = await api.searchScripts({ page: 1, pageSize: 100 });
       if (response.code === 200) {
         setScripts(response.data.list || []);
       }

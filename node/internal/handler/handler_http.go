@@ -7,17 +7,17 @@ import (
 	"time"
 )
 
-// HTTPHandler handles the execution of HTTP-based jobs.
+// HTTPHandler 处理基于 HTTP 的任务的执行
 type HTTPHandler struct{}
 
-// HttpExecTimeout defines the maximum allowed timeout for an HTTP request.
+// HttpExecTimeout 定义 HTTP 请求的最大允许超时时间
 const HttpExecTimeout = 300
 
-// Run executes an HTTP job.
+// Run 执行一个 HTTP 任务
 func (h *HTTPHandler) Run(job *Job) (result string, err error) {
 	proc := &JobProc{
 		JobProc: &models.JobProc{
-			ID:       0, // HTTP tasks have no OS process ID.
+			ID:       0, // HTTP 任务没有操作系统进程 ID
 			JobID:    job.ID,
 			NodeUUID: job.RunOn,
 		},
@@ -37,7 +37,7 @@ func (h *HTTPHandler) Run(job *Job) (result string, err error) {
 	if job.HttpMethod == models.HttpMethodGet {
 		result, err = httpclient.Get(job.Command, job.Timeout)
 	} else {
-		// For POST requests, the command is split by '?' into URL and body.
+		// 对于 POST 请求，命令按“?”分割成 URL 和 body
 		urlFields := strings.Split(job.Command, "?")
 		url := urlFields[0]
 		var body string

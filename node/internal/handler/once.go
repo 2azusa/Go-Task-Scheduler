@@ -6,8 +6,8 @@ import (
 	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-// WatchOnce creates an etcd watch channel specifically for one-time jobs.
+// WatchOnce 为一次性任务创建一个etcd监视通道
 func WatchOnce() clientv3.WatchChan {
-	// It watches the predefined key prefix for one-time jobs.
+	// 监视一次性任务的预定义键前缀
 	return etcdclient.Watch(etcdclient.KeyEtcdOnceProfile, clientv3.WithPrefix())
 }

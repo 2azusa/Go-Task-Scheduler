@@ -16,11 +16,10 @@ import (
 // NodeRouter 结构体用于定义相关的路由处理器
 type NodeRouter struct{}
 
-// defaultNodeRouter 是 NodeRouter 的一个全局单例，在注册路由时使用
 var defaultNodeRouter = new(NodeRouter)
 
-// @Summary Delete a node
-// @Description Deletes a node by its UUID. The node must be inactive.
+// @Summary 删除节点
+// @Description 根据UUID删除节点。节点必须处于非活动状态
 // @Tags node
 // @Accept  json
 // @Produce  json
@@ -63,8 +62,8 @@ func (n *NodeRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// @Summary Search for nodes
-// @Description Searches for nodes based on specified criteria.
+// @Summary 搜索节点
+// @Description 根据指定条件搜索节点
 // @Tags node
 // @Accept  json
 // @Produce  json

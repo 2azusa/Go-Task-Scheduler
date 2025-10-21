@@ -4,9 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
+import { ServerInfo } from "@/types/api";
 
 const Settings = () => {
-  const [systemInfo, setSystemInfo] = useState<any>(null);
+  const [systemInfo, setSystemInfo] = useState<ServerInfo | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {

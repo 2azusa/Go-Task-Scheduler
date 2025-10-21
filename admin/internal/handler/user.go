@@ -1,7 +1,9 @@
 package handler
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"pulse/admin/internal/middlerware"
 	"pulse/admin/internal/model/request"
 	"pulse/admin/internal/model/resp"
@@ -12,16 +14,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 // UserRouter 用户路由结构体
 type UserRouter struct{}
 
-// defaultUserRouter 用于创建一个默认路由实例
 var defaultUserRouter = new(UserRouter)
 
-// @Summary User Login
-// @Description Authenticates a user and returns a token.
+// @Summary 用户登录
+// @Description 验证用户并返回token
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -55,8 +57,8 @@ func (u *UserRouter) Login(c *gin.Context) {
 	}, "login success", c)
 }
 
-// @Summary Register a new user
-// @Description Creates a new user account.
+// @Summary 注册新用户
+// @Description 创建新的用户帐户
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -106,9 +108,8 @@ func (u *UserRouter) Register(c *gin.Context) {
 	resp.OkWithDetailed(userModel, "register success", c)
 }
 
-// Update 处理更新用户信息的请求
-// @Summary Update user information
-// @Description Updates a user's information.
+// @Summary 更新用户信息
+// @Description 更新用户的个人信息
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -118,14 +119,17 @@ func (u *UserRouter) Register(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /user/update [post]
 func (u *UserRouter) Update(c *gin.Context) {
-	var req models.User
+	var req request.ReqUserUpdate
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[update_user] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[update_user] request parameter error", c)
 		return
 	}
-	req.Updated = time.Now().Unix()
-	err := req.Update()
+
+	userId, _ := c.Get("userID")
+	// todo if !exists return 身份验证失败
+
+	err := service.DefaultUserService.UpdateUser(userId.(int), &req)
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[update_user] db update error: %v", err))
 		resp.FailWithMessage(resp.ERROR, "[update_user] db update error", c)
@@ -134,8 +138,8 @@ func (u *UserRouter) Update(c *gin.Context) {
 	resp.OkWithMessage("update success", c)
 }
 
-// @Summary Delete users
-// @Description Deletes one or more users by their IDs.
+// @Summary 删除用户
+// @Description 根据ID删除一个或多个用户
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -160,8 +164,8 @@ func (u *UserRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// @Summary Change user password
-// @Description Changes the password for the currently logged-in user.
+// @Summary 更改用户密码
+// @Description 更改当前登录用户的密码
 // @Tags users
 // @Accept  json
 // @Produce  json
@@ -170,6 +174,24 @@ func (u *UserRouter) Delete(c *gin.Context) {
 // @Failure 400 {object} resp.Response "Bad request"
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /user/change_pw [post]
+
+// func (u *UserRouter) ChangePassword(c *gin.Context) {
+// 	var req request.ReqChangePassword
+// 	if err := c.ShouldBindJSON(&req); err != nil {
+// 		logger.GetLogger().Error(fmt.Sprintf("[change_password] request parameter error: %s", err.Error()))
+// 		resp.FailWithMessage(resp.ErrorRequestParameter, "[change_password] request parameter error", c) // 1001
+// 		return
+// 	}
+
+//		userId, _ := c.Get("userID")
+//		err := service.DefaultUserService.ChangePassword(userId.(int), req.Password, req.NewPassword)
+//		if err != nil {
+//			logger.GetLogger().Error(fmt.Sprintf("[change_password] db error: %v", err))
+//			resp.FailWithMessage(resp.ERROR, "[change_password] db error", c) // 1000
+//			return
+//		}
+//		resp.OkWithMessage("update success", c)
+//	}
 func (u *UserRouter) ChangePassword(c *gin.Context) {
 	var req request.ReqChangePassword
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -178,18 +200,38 @@ func (u *UserRouter) ChangePassword(c *gin.Context) {
 		return
 	}
 
-	userId, _ := c.Get("userID")
-	err := service.DefaultUserService.ChangePassword(userId.(int), req.Password, req.NewPassword)
+	// --- 关键的安全检查 ---
+	// 1. 检查 context 中是否存在 "userID"
+	val, exists := c.Get("userID")
+	if !exists {
+		logger.GetLogger().Error("[change_password] failed to get userID from context. Token may be missing or invalid.")
+		// 明确告诉前端需要认证
+		resp.FailWithMessage(resp.ERROR, "user not authenticated", c)
+		return
+	}
+
+	// 2. 检查 "userID" 的类型是否正确
+	userId, ok := val.(int)
+	if !ok {
+		logger.GetLogger().Error("[change_password] userID in context is not of expected type (int)")
+		resp.FailWithMessage(resp.ERROR, "internal server error: invalid user id type", c)
+		return
+	}
+	// --- 安全检查结束 ---
+
+	// 调用我们已经确认是安全的 Service 层代码
+	err := service.DefaultUserService.ChangePassword(userId, req.Password, req.NewPassword)
 	if err != nil {
-		logger.GetLogger().Error(fmt.Sprintf("[change_password] db error: %v", err))
-		resp.FailWithMessage(resp.ERROR, "[change_password] db error", c)
+		logger.GetLogger().Error(fmt.Sprintf("[change_password] service error: %v", err))
+		// 将 Service 层返回的具体错误信息返回给前端
+		resp.FailWithMessage(resp.ERROR, err.Error(), c)
 		return
 	}
 	resp.OkWithMessage("update success", c)
 }
 
-// @Summary Find a user by ID
-// @Description Retrieves the details of a single user by their ID. If no ID is provided, it retrieves the current user's details.
+// @Summary 根据ID查找用户
+// @Description 根据用户ID检索单个用户的详细信息。如果未提供ID，则检索当前用户的详细信息
 // @Tags users
 // @Produce  json
 // @Param   id query int false "User ID"
@@ -198,14 +240,34 @@ func (u *UserRouter) ChangePassword(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /user/find [get]
 func (u *UserRouter) FindById(c *gin.Context) {
+
+	// // --- 开始调试 ---
+	// // 1. 读取请求体
+	// bodyBytes, err := io.ReadAll(c.Request.Body)
+	// if err != nil {
+	// 	logger.GetLogger().Error(fmt.Sprintf("[find_job] failed to read request body: %s", err.Error()))
+	// 	resp.FailWithMessage(resp.ERROR, "[find_job] failed to read request body", c)
+	// 	return
+	// }
+	// // 2. 将读取的 body 写回，以便 ShouldBindJSON 还能使用
+	// c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// // 3. 打印所有诊断信息到你的日志
+	// logger.GetLogger().Info("================ DEBUGGING REQUEST ================")
+	// logger.GetLogger().Info(fmt.Sprintf("Request Method: %s", c.Request.Method))
+	// logger.GetLogger().Info(fmt.Sprintf("Content-Type Header: %s", c.GetHeader("Content-Type")))
+	// logger.GetLogger().Info(fmt.Sprintf("Raw Request Body: %s", string(bodyBytes)))
+	// logger.GetLogger().Info("===================================================")
+	// // --- 结束调试 ---
+
 	var req request.ByID
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[find_user] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[find_user] request parameter error", c)
 		return
 	}
 
-	userId, _ := c.Get("userId")
+	userId, _ := c.Get("userID")
 	if req.ID == 0 {
 		req.ID = userId.(int)
 	}
@@ -213,6 +275,15 @@ func (u *UserRouter) FindById(c *gin.Context) {
 	userModel := models.User{ID: req.ID}
 	err := userModel.FindById()
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.GetLogger().Info(fmt.Sprintf("[find_user] 未找到 ID 为 %d 的用户", req.ID))
+			// 以 404 Not Found 状态码响应
+			c.JSON(http.StatusNotFound, gin.H{
+				"code": 404,
+				"msg":  fmt.Sprintf("未找到 ID 为 %d 的用户", req.ID),
+			})
+			return
+		}
 		logger.GetLogger().Error(fmt.Sprintf("[find_user] db error: %v", err))
 		resp.FailWithMessage(resp.ERROR, "[find_user] db error", c)
 		return
@@ -220,8 +291,8 @@ func (u *UserRouter) FindById(c *gin.Context) {
 	resp.OkWithDetailed(userModel, "find success", c)
 }
 
-// @Summary Search for users
-// @Description Searches for users based on specified criteria.
+// @Summary 搜索用户
+// @Description 根据指定条件搜索用户
 // @Tags users
 // @Accept  json
 // @Produce  json

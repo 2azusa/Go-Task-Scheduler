@@ -41,6 +41,7 @@ func (u *User) Insert() (insertId int, err error) {
 	return
 }
 
+// return dbclient.GetMysqlDB().Table(PulseUserTableName).Where("id = ?", u.ID).First(u).Error
 // FindById 根据ID查找用户
 func (u *User) FindById() error {
 	return dbclient.GetMysqlDB().Table(PulseUserTableName).Select("id", "username", "email", "role", "created", "updated").Where("id = ?", u.ID).First(u).Error

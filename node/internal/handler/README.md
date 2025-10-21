@@ -127,7 +127,7 @@ handler 包是项目中执行节点的核心业务逻辑层，负责任务的定
 这组函数利用 etcd 的 Watch 机制，实现对任务、进程和系统指令变化的实时监控
 
 #### `WatchJobs, WatchProc, WatchOnce, WatchSystem` 函数
-- 作用：创建并返回一个 etcd 的 clientv3.WatchChan，用于监听特定 key 前缀下的所有变化事件（增、删、改）
+- 作用：创建并返回一个 etcd 的 clientv3.WatchChan，用于监听指定 key 前缀下的所有变化事件（增、删、改）
 - 输入：nodeUUID string (除 WatchOnce 外都需要)，用于构造节点专属的监听路径
 - 输出：clientv3.WatchChan：一个只读通道，可以从中接收 etcd 的 WatchResponse 事件
 - 流程：
@@ -138,7 +138,7 @@ handler 包是项目中执行节点的核心业务逻辑层，负责任务的定
 ## 6. 辅助函数
 
 #### `JobKey` 函数
-- 作用：生成一个在 etcd 中唯一标识某个节点上特定作业的 key
+- 作用：生成一个在 etcd 中唯一标识某个节点上指定任务的 key
 - 输入：nodeUUID string, jobId int
 - 输出：`string`：格式化后的 etcd key，如 /pulse/jobs/{nodeUUID}/{jobId}
 

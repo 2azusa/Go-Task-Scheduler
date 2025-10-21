@@ -1,23 +1,41 @@
-// API Response Types
+// ===================================================================
+//  通用及 API 结构类型
+// ===================================================================
+
+/**
+ * API 响应的通用外层结构。
+ */
 export interface ApiResponse<T> {
   code: number;
   data: T;
   msg: string;
 }
 
+/**
+ * 分页查询结果的通用结构。
+ */
 export interface PageResult<T> {
   list: T[];
   total: number;
   page: number;
-  page_size: number;
+  pageSize: number;
 }
 
-// User Types
+// ===================================================================
+//  用户与认证 (User & Auth)
+// ===================================================================
+
+export enum UserRole {
+  Normal = 1, // 普通用户
+  Admin = 2, // 管理员
+}
+
 export interface User {
   id: number;
   username: string;
+  password: number;
   email: string;
-  role: number; // 1: 普通用户, 2: 管理员
+  role: UserRole;
   created: number;
   updated: number;
 }
@@ -36,26 +54,61 @@ export interface RegisterRequest {
   username: string;
   password: string;
   email: string;
+  role?: UserRole;
+}
+
+export interface UserSearchRequest {
+  page?: number;
+  pageSize?: number;
+  id?: number;
+  username?: string;
+  email?: string;
   role?: number;
 }
 
-// Job Types
+// ===================================================================
+//  任务 (Job)
+// ===================================================================
+
+export enum JobType {
+  Command = 1,
+  HTTP = 2,
+}
+
+export enum HttpMethod {
+  GET = 1,
+  POST = 2,
+  PUT = 3,
+  DELETE = 4,
+}
+
+export enum JobAllocation {
+  Manual = 1, // 手动分配
+  Auto = 2, // 自动分配
+}
+
+export enum NotifyType {
+  Mail = 1, // 发送邮件
+  WebHook = 2, // 飞书消息卡片
+}
+
 export interface Job {
   id: number;
   name: string;
   command: string;
-  script_id?: number[];
+  scriptId?: string;
   timeout?: number;
-  retry_times?: number;
-  retry_interval?: number;
-  job_type: number; // 1: 命令任务, 2: HTTP任务
-  http_method?: number; // 1: GET, 2: POST
-  notify_type: number;
-  notify_to?: number[];
-  spec: string; // Cron 表达式
-  run_on?: string; // 节点 UUID
+  retryTimes?: number;
+  retryInterval?: number;
+  jobType: JobType;
+  httpMethod?: HttpMethod;
+  httpUrl?: string;
+  notifyType: NotifyType;
+  notifyTo?: string;
+  spec: string;
+  runOn?: string;
   note?: string;
-  allocation: number; // 1: 手动分配, 2: 自动分配
+  allocation: JobAllocation;
   status?: number;
   created?: number;
   updated?: number;
@@ -64,30 +117,47 @@ export interface Job {
 export interface JobLog {
   id: number;
   name: string;
-  job_id: number;
+  jobId: number;
   command: string;
   ip: string;
   hostname: string;
-  node_uuid: string;
+  nodeUuid: string;
   success: boolean;
   output: string;
   spec: string;
-  retry_times: number;
-  start_time: number;
-  end_time: number;
+  retryTimes: number;
+  startTime: number;
+  endTime: number;
+}
+
+export interface JobLogSearchRequest {
+  page?: number;
+  pageSize?: number;
+  name?: string;
+  jobId?: number;
+  nodeUuid?: string;
+  success?: boolean;
 }
 
 export interface JobSearchRequest {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   id?: number;
   name?: string;
-  run_on?: string;
-  job_type?: number;
+  runOn?: string;
+  jobType?: number;
   status?: number;
 }
 
-// Node Types
+// ===================================================================
+//  节点 (Node)
+// ===================================================================
+
+export enum NodeStatus {
+  Connected = 1,
+  Disconnected = 2,
+}
+
 export interface Node {
   id: number;
   pid: string;
@@ -95,22 +165,29 @@ export interface Node {
   hostname: string;
   uuid: string;
   version: string;
-  status: number; // 1: 连接成功, 2: 连接失败
+  status: NodeStatus;
   up: number;
   down: number;
-  job_count: number;
+}
+
+export interface NodeSearchResult {
+  node: Node;
+  jobCount: number;
 }
 
 export interface NodeSearchRequest {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   ip?: string;
   uuid?: string;
   up?: number;
   status?: number;
 }
 
-// Script Types
+// ===================================================================
+//  脚本 (Script)
+// ===================================================================
+
 export interface Script {
   id?: number;
   name: string;
@@ -121,26 +198,63 @@ export interface Script {
 
 export interface ScriptSearchRequest {
   page?: number;
-  page_size?: number;
+  pageSize?: number;
   id?: number;
   name?: string;
 }
 
-// Statistics Types
+// ===================================================================
+//  统计 (Statistics)
+// ===================================================================
+
 export interface SystemStatistics {
-  normal_node_count: number;
-  fail_node_count: number;
-  job_exc_success_count: number;
-  job_running_count: number;
-  job_exc_fail_count: number;
+  normalNodeCount: number;
+  failNodeCount: number;
+  jobExcSuccessCount: number;
+  jobRunningCount: number;
+  jobExcFailCount: number;
 }
 
 export interface DateCount {
   date: string;
-  count: string;
+  count: number;
 }
 
 export interface WeekStatistics {
-  success_date_count: DateCount[];
-  fail_date_count: DateCount[];
+  successDateCount: DateCount[];
+  failDateCount: DateCount[];
+}
+
+export interface ServerInfo {
+  os: Os;
+  cpu: Cpu;
+  ram: Ram;
+  disk: Disk;
+}
+
+interface Os {
+  goos: string;
+  numCpu: number;
+  compiler: string;
+  goVersion: string;
+  numGoroutine: number;
+}
+
+interface Cpu {
+  cpus: number[];
+  cores: number;
+}
+
+interface Ram {
+  usedMb: number;
+  totalMb: number;
+  usedPercent: number;
+}
+
+interface Disk {
+  usedMb: number;
+  usedGb: number;
+  totalMb: number;
+  totalGb: number;
+  usedPercent: number;
 }

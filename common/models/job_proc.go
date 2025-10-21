@@ -14,9 +14,9 @@ type JobProcVal struct {
 
 // JobProc 表示一个任务进程，包括其基本信息和状态
 type JobProc struct {
-	ID         int    `json:"id"`        // 任务进程ID
-	JobID      int    `json:"job_id"`    // 关联的任务ID
-	NodeUUID   string `json:"node_uuid"` // 节点唯一标识
+	ID         int    `json:"id"`       // 任务进程ID
+	JobID      int    `json:"job_id"`   // 关联的任务ID
+	NodeUUID   string `json:"nodeUuid"` // 节点唯一标识
 	JobProcVal        // 任务进程状态
 
 	Running int32          // 运行状态标识

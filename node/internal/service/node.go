@@ -18,16 +18,16 @@ import (
 	"github.com/jakecoffman/cron"
 )
 
-// NodeServer represents a worker node instance.
+// NodeServer 表示一个工作节点实例
 type NodeServer struct {
-	*etcdclient.ServerReg // Embedded Etcd server registry for node registration and heartbeating.
-	*models.Node          // Embedded node information model.
-	*cron.Cron            // Embedded cron scheduler instance.
+	*etcdclient.ServerReg // 嵌入式 Etcd 服务器注册表，用于节点注册和心跳
+	*models.Node          // 嵌入式节点信息模型
+	*cron.Cron            // 嵌入式 cron 调度程序实例
 
-	jobs handler.Jobs // Collection of jobs running on the current node.
+	jobs handler.Jobs // 在当前节点上运行的任务集合
 }
 
-// NewNodeServer creates and initializes a new NodeServer instance.
+// NewNodeServer 创建并初始化一个新的 NodeServer 实例
 func NewNodeServer() (*NodeServer, error) {
 	uuid, err := utils.UUID()
 	if err != nil {
@@ -59,7 +59,7 @@ func NewNodeServer() (*NodeServer, error) {
 
 }
 
-// exist checks if a node with the same UUID is already registered and running in Etcd.
+// exist 检查具有相同 UUID 的节点是否已在 Etcd 中注册并正在运行
 func (srv *NodeServer) exist(nodeUUID string) (pid int, err error) {
 	resp, err := etcdclient.Get(fmt.Sprintf(etcdclient.KeyEtcdNode, nodeUUID))
 	if err != nil {
@@ -82,14 +82,14 @@ func (srv *NodeServer) exist(nodeUUID string) (pid int, err error) {
 		return -1, nil
 	}
 
-	// Sending signal 0 to a process is a standard way to check if it's alive.
+	// 向进程发送信号 0 是检查其是否处于活动状态的标准方法
 	if p != nil && p.Signal(syscall.Signal(0)) == nil {
 		return
 	}
 	return -1, nil
 }
 
-// Register registers the current node to Etcd.
+// Register 将当前节点注册到 Etcd
 func (srv *NodeServer) Register() error {
 	pid, err := srv.exist(srv.UUID)
 	if err != nil {
@@ -102,14 +102,14 @@ func (srv *NodeServer) Register() error {
 	if err != nil {
 		return fmt.Errorf("node[%s] with pid[%d] json error%s", srv.UUID, pid, err.Error())
 	}
-	// Register the server to etcd with a lease (TTL).
+	// 使用租约（TTL）将服务器注册到 etcd
 	if err := srv.ServerReg.Register(fmt.Sprintf(etcdclient.KeyEtcdNode, srv.UUID), string(b)); err != nil {
 		return err
 	}
 	return nil
 }
 
-// Stop stops the node server and performs cleanup.
+// Stop 停止节点服务器并执行清理
 func (srv *NodeServer) Stop(i any) {
 	srv.Down()
 
@@ -126,7 +126,7 @@ func (srv *NodeServer) Stop(i any) {
 	srv.Cron.Stop()
 }
 
-// Down updates the node and job status in the database when the node is shutting down.
+// Down 在节点关闭时更新数据库中的节点和任务状态
 func (srv *NodeServer) Down() {
 	srv.Status = models.NodeConnFail
 	srv.DownTime = time.Now().Unix()
@@ -134,8 +134,8 @@ func (srv *NodeServer) Down() {
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("failed to update  node[%s] down  error:%s", srv.UUID, err.Error()))
 	}
-	// Reset the status of all jobs assigned to this node to "NotAssigned"
-	// so the admin service can reschedule them.
+	// 将分配给此节点的所有任务的状态重置为“NotAssigned”
+	// 以便管理服务可以重新调度它们
 	err = dbclient.GetMysqlDB().Table(models.PulseJobTableName).Select("status").Where("run_on = ? ", srv.UUID).Updates(models.Job{
 		Status: models.JobStatusNotAssigned,
 	}).Error
@@ -145,7 +145,7 @@ func (srv *NodeServer) Down() {
 	}
 }
 
-// Run starts the main logic of the node server.
+// Run 启动节点服务器的主要逻辑
 func (srv *NodeServer) Run() (err error) {
 	defer func() {
 		if err != nil {
@@ -173,7 +173,7 @@ func (srv *NodeServer) Run() (err error) {
 	return
 }
 
-// loadJobs loads jobs assigned to this node from the database.
+// loadJobs 从数据库加载分配给此节点的任务
 func (srv *NodeServer) loadJobs() (err error) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -199,7 +199,7 @@ func (srv *NodeServer) loadJobs() (err error) {
 	return
 }
 
-// addJob adds a job to the cron scheduler.
+// addJob 将任务添加到 cron 调度程序
 func (srv *NodeServer) addJob(j *handler.Job) {
 	if err := j.Check(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("job[%d] check error :%s", j.ID, err.Error()))
@@ -244,12 +244,12 @@ func (srv *NodeServer) addJob(j *handler.Job) {
 	}
 }
 
-// jobCronName generates a unique name for a cron job.
+// jobCronName 生成 cron 任务的唯一名称
 func (srv *NodeServer) jobCronName(jobId int) string {
 	return fmt.Sprintf(srv.UUID+"/%d", jobId)
 }
 
-// modifyJob modifies an existing job in the scheduler.
+// modifyJob 修改调度程序中的现有任务
 func (srv *NodeServer) modifyJob(j *handler.Job) {
 	oldJob, ok := srv.jobs[j.ID]
 	if !ok {

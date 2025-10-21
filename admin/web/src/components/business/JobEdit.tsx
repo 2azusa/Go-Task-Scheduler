@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   Dialog,
@@ -17,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Job } from "@/types/api";
+import { Job, HttpMethod } from "@/types/api";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -27,16 +26,39 @@ interface JobEditProps {
   onSuccess: () => void;
 }
 
+const httpMethodMap: { [key: string]: HttpMethod } = {
+  GET: HttpMethod.GET,
+  POST: HttpMethod.POST,
+  PUT: HttpMethod.PUT,
+  DELETE: HttpMethod.DELETE,
+};
+
+const httpMethodReverseMap: { [key: number]: string } = {
+  [HttpMethod.GET]: "GET",
+  [HttpMethod.POST]: "POST",
+  [HttpMethod.PUT]: "PUT",
+  [HttpMethod.DELETE]: "DELETE",
+};
+
 export const JobEdit = ({ job, onClose, onSuccess }: JobEditProps) => {
   const [formData, setFormData] = useState<Partial<Job>>({});
 
   useEffect(() => {
     if (job) {
-      setFormData(job);
+      setFormData({
+        ...job,
+        httpMethod: job.httpMethod
+          ? httpMethodReverseMap[job.httpMethod]
+          : "GET",
+      } as any);
     } else {
       setFormData({
-        job_type: 1,
+        jobType: 1,
         status: 1,
+        allocation: 2, // Default to Auto
+        retryTimes: 0,
+        retryInterval: 0,
+        timeout: 0,
       });
     }
   }, [job]);
@@ -48,7 +70,11 @@ export const JobEdit = ({ job, onClose, onSuccess }: JobEditProps) => {
   const handleSubmit = async () => {
     try {
       const apiCall = job?.id ? api.updateJob : api.createJob;
-      const response = await apiCall(formData);
+      const dataToSend = {
+        ...formData,
+        httpMethod: httpMethodMap[formData.httpMethod as unknown as string],
+      };
+      const response = await apiCall(dataToSend);
       if (response.code === 200) {
         toast.success(job?.id ? "更新成功" : "创建成功");
         onSuccess();
@@ -62,31 +88,26 @@ export const JobEdit = ({ job, onClose, onSuccess }: JobEditProps) => {
 
   return (
     <Dialog open={!!job} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent>
+      <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>{job?.id ? "编辑任务" : "创建任务"}</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="name" className="text-right">
-              任务名称
-            </Label>
+        <div className="grid max-h-[70vh] grid-cols-1 gap-4 overflow-y-auto p-1 md:grid-cols-2 md:gap-6">
+          <div className="space-y-2">
+            <Label htmlFor="name">任务名称</Label>
             <Input
               id="name"
               value={formData.name || ""}
               onChange={(e) => handleChange("name", e.target.value)}
-              className="col-span-3"
             />
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="job_type" className="text-right">
-              任务类型
-            </Label>
+          <div className="space-y-2">
+            <Label htmlFor="jobType">任务类型</Label>
             <Select
-              value={String(formData.job_type)}
-              onValueChange={(value) => handleChange("job_type", parseInt(value))}
+              value={String(formData.jobType)}
+              onValueChange={(value) => handleChange("jobType", parseInt(value))}
             >
-              <SelectTrigger className="col-span-3">
+              <SelectTrigger>
                 <SelectValue placeholder="选择任务类型" />
               </SelectTrigger>
               <SelectContent>
@@ -95,51 +116,40 @@ export const JobEdit = ({ job, onClose, onSuccess }: JobEditProps) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="grid grid-cols-4 items-center gap-4">
-            <Label htmlFor="spec" className="text-right">
-              Cron表达式
-            </Label>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="spec">Cron表达式</Label>
             <Input
               id="spec"
               value={formData.spec || ""}
               onChange={(e) => handleChange("spec", e.target.value)}
-              className="col-span-3"
             />
           </div>
-          {formData.job_type === 1 ? (
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="command" className="text-right">
-                命令
-              </Label>
+          {formData.jobType === 1 ? (
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="command">命令</Label>
               <Input
                 id="command"
                 value={formData.command || ""}
                 onChange={(e) => handleChange("command", e.target.value)}
-                className="col-span-3"
               />
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="http_url" className="text-right">
-                  URL
-                </Label>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="httpUrl">URL</Label>
                 <Input
-                  id="http_url"
-                  value={formData.http_url || ""}
-                  onChange={(e) => handleChange("http_url", e.target.value)}
-                  className="col-span-3"
+                  id="httpUrl"
+                  value={formData.httpUrl || ""}
+                  onChange={(e) => handleChange("httpUrl", e.target.value)}
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="http_method" className="text-right">
-                  Method
-                </Label>
+              <div className="space-y-2">
+                <Label htmlFor="httpMethod">Method</Label>
                 <Select
-                  value={formData.http_method || "GET"}
-                  onValueChange={(value) => handleChange("http_method", value)}
+                  value={formData.httpMethod as unknown as string || "GET"}
+                  onValueChange={(value) => handleChange("httpMethod", value)}
                 >
-                  <SelectTrigger className="col-span-3">
+                  <SelectTrigger>
                     <SelectValue placeholder="选择HTTP方法" />
                   </SelectTrigger>
                   <SelectContent>
@@ -152,6 +162,73 @@ export const JobEdit = ({ job, onClose, onSuccess }: JobEditProps) => {
               </div>
             </>
           )}
+          <div className="space-y-2">
+            <Label htmlFor="timeout">超时时间 (秒)</Label>
+            <Input
+              id="timeout"
+              type="number"
+              value={formData.timeout || 0}
+              onChange={(e) =>
+                handleChange("timeout", parseInt(e.target.value))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="retryTimes">重试次数</Label>
+            <Input
+              id="retryTimes"
+              type="number"
+              value={formData.retryTimes || 0}
+              onChange={(e) =>
+                handleChange("retryTimes", parseInt(e.target.value))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="retryInterval">重试间隔 (秒)</Label>
+            <Input
+              id="retryInterval"
+              type="number"
+              value={formData.retryInterval || 0}
+              onChange={(e) =>
+                handleChange("retryInterval", parseInt(e.target.value))
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="allocation">分配方式</Label>
+            <Select
+              value={String(formData.allocation)}
+              onValueChange={(value) =>
+                handleChange("allocation", parseInt(value))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="选择分配方式" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="1">手动</SelectItem>
+                <SelectItem value="2">自动</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+           <div className="space-y-2">
+            <Label htmlFor="runOn">指定节点 (UUID)</Label>
+            <Input
+              id="runOn"
+              value={formData.runOn || ""}
+              onChange={(e) => handleChange("runOn", e.target.value)}
+              disabled={formData.allocation === 2}
+            />
+          </div>
+          <div className="space-y-2 md:col-span-2">
+            <Label htmlFor="note">备注</Label>
+            <Input
+              id="note"
+              value={formData.note || ""}
+              onChange={(e) => handleChange("note", e.target.value)}
+            />
+          </div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>

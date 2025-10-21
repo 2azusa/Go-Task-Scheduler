@@ -15,24 +15,24 @@ import (
 	"strings"
 	"time"
 
-	clientv3 "go.etcd.io/etcd/client/v3"
 	"github.com/jakecoffman/cron"
+	clientv3 "go.etcd.io/etcd/client/v3"
 )
 
-// Job wraps models.Job for node-side operations.
+// Job 包装 models.Job 用于节点端操作
 type Job struct {
 	*models.Job
 }
 
-// Jobs is a map of jobs, keyed by job ID.
+// Jobs 是一个任务的映射，以任务id为键
 type Jobs map[int]*Job
 
-// JobKey generates a unique etcd key for a job on a specific node.
+// JobKey 为指定节点上的任务生成唯一的 etcd key
 func JobKey(nodeUUID string, jobId int) string {
 	return fmt.Sprintf(etcdclient.KeyEtcdJob, nodeUUID, jobId)
 }
 
-// GetJobAndRev retrieves a job and its revision from etcd.
+// GetJobAndRev 从 etcd 获取一个任务和它的版本
 func GetJobAndRev(nodeUUID string, jobId int) (job *Job, rev int64, err error) {
 	resp, err := etcdclient.Get(JobKey(nodeUUID, jobId))
 	if err != nil {
@@ -53,7 +53,7 @@ func GetJobAndRev(nodeUUID string, jobId int) (job *Job, rev int64, err error) {
 	return
 }
 
-// GetJobs retrieves all jobs for a specific node from etcd.
+// GetJobs 从 etcd 获取指定节点的所有任务
 func GetJobs(nodeUUID string) (jobs Jobs, err error) {
 	resp, err := etcdclient.Get(fmt.Sprintf(etcdclient.KeyEtcdJobProfile, nodeUUID), clientv3.WithPrefix())
 	if err != nil {
@@ -81,7 +81,7 @@ func GetJobs(nodeUUID string) (jobs Jobs, err error) {
 	return
 }
 
-// RunWithRecovery executes the job with a panic recovery mechanism.
+// RunWithRecovery 用紧急恢复机制执行任务
 func (j *Job) RunWithRecovery() {
 	defer func() {
 		if r := recover(); r != nil {
@@ -143,7 +143,7 @@ func (j *Job) RunWithRecovery() {
 	}
 }
 
-// CreateJob wraps a Job into a cron.FuncJob.
+// CreateJob 将 Job 封装到 cron.FuncJob
 func CreateJob(j *Job) cron.FuncJob {
 	h := CreateHandler(j)
 	if h == nil {
@@ -183,7 +183,7 @@ func CreateJob(j *Job) cron.FuncJob {
 				if j.RetryInterval > 0 {
 					time.Sleep(time.Duration(j.RetryInterval) * time.Second)
 				} else {
-					// Default retry interval increases with each attempt.
+					// 默认重试间隔随着每次尝试而增加
 					time.Sleep(time.Duration(i) * time.Minute)
 				}
 			}
@@ -225,12 +225,12 @@ func CreateJob(j *Job) cron.FuncJob {
 	return jobFunc
 }
 
-// WatchJobs creates a watch channel for job changes on a specific node.
+// WatchJobs 为指定节点上的任务创建一个监视通道
 func WatchJobs(nodeUUID string) clientv3.WatchChan {
 	return etcdclient.Watch(fmt.Sprintf(etcdclient.KeyEtcdJobProfile, nodeUUID), clientv3.WithPrefix())
 }
 
-// GetJobIDFromKey extracts the job ID from an etcd key.
+// GetJobIDFromKey 从 etcd key 获取任务id
 func GetJobIDFromKey(key string) int {
 	index := strings.LastIndex(key, "/")
 	if index < 0 {
@@ -243,7 +243,7 @@ func GetJobIDFromKey(key string) int {
 	return jobId
 }
 
-// CreateJobLog creates a log entry for a job execution.
+// CreateJobLog 为任务执行新建日志
 func (j *Job) CreateJobLog() (int, error) {
 	start := time.Now()
 	jobLog := &models.JobLog{
@@ -259,7 +259,7 @@ func (j *Job) CreateJobLog() (int, error) {
 	return jobLog.Insert()
 }
 
-// UpdateJobLog updates a job log entry.
+// UpdateJobLog 更新任务日志
 func UpdateJobLog(jobLogId int, start time.Time, output string, retry int, success bool) error {
 	end := time.Now()
 	jobLog := &models.JobLog{
@@ -273,12 +273,12 @@ func UpdateJobLog(jobLogId int, start time.Time, output string, retry int, succe
 	return jobLog.Update()
 }
 
-// Success marks the job log as successful.
+// Success 将任务日志标记为成功
 func (j *Job) Success(jobLogId int, start time.Time, output string, retry int) error {
 	return UpdateJobLog(jobLogId, start, output, retry, true)
 }
 
-// Fail marks the job log as failed.
+// Fail 将任务日志标记为失败
 func (j *Job) Fail(jobLogId int, start time.Time, errMsg string, retry int) error {
 	return UpdateJobLog(jobLogId, start, errMsg, retry, false)
 }

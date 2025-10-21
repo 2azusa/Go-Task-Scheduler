@@ -5,6 +5,6 @@ import "pulse/common/models"
 type (
 	RspNodeSearch struct {
 		models.Node
-		JobCount int `json:"job_count"`
+		JobCount int `json:"jobCount"`
 	}
 )

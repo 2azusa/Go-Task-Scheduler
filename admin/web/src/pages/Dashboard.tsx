@@ -41,10 +41,10 @@ const Dashboard = () => {
     }
   };
 
-  const chartData = (weekStats?.success_date_count || []).map((item, index) => ({
+  const chartData = (weekStats?.successDateCount || []).map((item, index) => ({
     date: item.date,
-    成功: parseInt(item.count),
-    失败: parseInt(weekStats?.fail_date_count?.[index]?.count || "0"),
+    成功: parseInt(item.count as unknown as string),
+    失败: parseInt(weekStats?.failDateCount?.[index]?.count as unknown as string || "0"),
   }));
 
   return (
@@ -65,7 +65,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats?.normal_node_count || 0}
+                {stats?.normalNodeCount || 0}
               </div>
             </CardContent>
           </Card>
@@ -79,7 +79,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats?.fail_node_count || 0}
+                {stats?.failNodeCount || 0}
               </div>
             </CardContent>
           </Card>
@@ -93,7 +93,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats?.job_exc_success_count || 0}
+                {stats?.jobExcSuccessCount || 0}
               </div>
             </CardContent>
           </Card>
@@ -107,7 +107,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats?.job_running_count || 0}
+                {stats?.jobRunningCount || 0}
               </div>
             </CardContent>
           </Card>
@@ -121,7 +121,7 @@ const Dashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-foreground">
-                {stats?.job_exc_fail_count || 0}
+                {stats?.jobExcFailCount || 0}
               </div>
             </CardContent>
           </Card>

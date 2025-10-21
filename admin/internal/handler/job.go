@@ -2,7 +2,9 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"net/http"
 	"pulse/admin/internal/model/request"
 	"pulse/admin/internal/model/resp"
 	"pulse/admin/internal/service"
@@ -14,17 +16,16 @@ import (
 
 	"github.com/gin-gonic/gin"
 	clientv3 "go.etcd.io/etcd/client/v3"
+	"gorm.io/gorm"
 )
 
 // JobRouter 结构体用于组织与任务相关的路由处理器
 type JobRouter struct{}
 
-// defaultJobRouter 是JobRouter的一个默认实例
 var defaultJobRouter = new(JobRouter)
 
-// CreateOrUpdate 用于创建或更新任务的HTTP请求
-// @Summary Create or update a job
-// @Description Creates a new job or updates an existing one.
+// @Summary 创建或更新任务
+// @Description 创建新任务或更新现有任务
 // @Tags job
 // @Accept  json
 // @Produce  json
@@ -110,20 +111,21 @@ func (j *JobRouter) CreateOrUpdate(c *gin.Context) {
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[create_job] json marshal job error: %s", err.Error()))
 		resp.FailWithMessage(resp.ERROR, "[create_job] json marshal job error", c)
-			return
+		return
 	}
 	// 将任务数据Put到etcd， key格式为 /pulse/job/<node_uuid>/<job_id>
 	_, err = etcdclient.Put(fmt.Sprintf(etcdclient.KeyEtcdJob, req.RunOn, req.ID), string(b))
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[create_job] etcd put job error:%s", err.Error()))
 		resp.FailWithMessage(resp.ERROR, "[create_job] etcd put job error", c)
-			return
+		return
 	}
 
 	resp.OkWithDetailed(req, "operate success", c)
 }
-// @Summary Delete jobs
-// @Description Deletes one or more jobs by their IDs.
+
+// @Summary 删除任务
+// @Description 根据ID删除一个或多个任务。
 // @Tags job
 // @Accept  json
 // @Produce  json
@@ -160,8 +162,8 @@ func (j *JobRouter) Delete(c *gin.Context) {
 	resp.OkWithMessage("delete success", c)
 }
 
-// @Summary Find a job by ID
-// @Description Retrieves the details of a single job by its ID.
+// @Summary 根据ID查找任务
+// @Description 根据任务ID检索单个任务的详细信息
 // @Tags job
 // @Produce  json
 // @Param   id query int true "Job ID"
@@ -170,8 +172,27 @@ func (j *JobRouter) Delete(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /job/find [get]
 func (j *JobRouter) FindById(c *gin.Context) {
+	// // --- 开始调试 ---
+	// // 1. 读取请求体
+	// bodyBytes, err := io.ReadAll(c.Request.Body)
+	// if err != nil {
+	// 	logger.GetLogger().Error(fmt.Sprintf("[find_job] failed to read request body: %s", err.Error()))
+	// 	resp.FailWithMessage(resp.ERROR, "[find_job] failed to read request body", c)
+	// 	return
+	// }
+	// // 2. 将读取的 body 写回，以便 ShouldBindJSON 还能使用
+	// c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// // 3. 打印所有诊断信息到你的日志
+	// logger.GetLogger().Info("================ DEBUGGING REQUEST ================")
+	// logger.GetLogger().Info(fmt.Sprintf("Request Method: %s", c.Request.Method))
+	// logger.GetLogger().Info(fmt.Sprintf("Content-Type Header: %s", c.GetHeader("Content-Type")))
+	// logger.GetLogger().Info(fmt.Sprintf("Raw Request Body: %s", string(bodyBytes)))
+	// logger.GetLogger().Info("===================================================")
+	// // --- 结束调试 ---
+
 	var req request.ByID
-	if err := c.ShouldBindQuery(&req); err != nil {
+	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[find_job] request parameter error: %s", err.Error()))
 		resp.FailWithMessage(resp.ErrorRequestParameter, "[find_job] request parameter error", c)
 		return
@@ -179,6 +200,15 @@ func (j *JobRouter) FindById(c *gin.Context) {
 	job := models.Job{ID: req.ID}
 	err := job.FindById()
 	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.GetLogger().Info(fmt.Sprintf("[find_user] 未找到 ID 为 %d 的任务", req.ID))
+			// 以 404 Not Found 状态码响应
+			c.JSON(http.StatusNotFound, gin.H{
+				"code": 404,
+				"msg":  fmt.Sprintf("未找到 ID 为 %d 的任务", req.ID),
+			})
+			return
+		}
 		logger.GetLogger().Error(fmt.Sprintf("[find_job] find job by id: %d error: %s", req.ID, err.Error()))
 		resp.FailWithMessage(resp.ERROR, "[find_job] find job by id error", c)
 		return
@@ -189,8 +219,7 @@ func (j *JobRouter) FindById(c *gin.Context) {
 	resp.OkWithDetailed(job, "find success", c)
 }
 
-// @Summary Search for jobs
-// @Description Searches for jobs based on specified criteria.
+// @Description 根据指定条件搜索任务。
 // @Tags job
 // @Accept  json
 // @Produce  json
@@ -200,6 +229,22 @@ func (j *JobRouter) FindById(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /job/search [post]
 func (j *JobRouter) Search(c *gin.Context) {
+	// // --- 开始调试 ---
+	// bodyBytes, err := io.ReadAll(c.Request.Body)
+	// if err != nil {
+	// 	logger.GetLogger().Error(fmt.Sprintf("[search_job] failed to read request body: %s", err.Error()))
+	// 	resp.FailWithMessage(resp.ERROR, "[search_job] failed to read request body", c)
+	// 	return
+	// }
+	// c.Request.Body = io.NopCloser(bytes.NewBuffer(bodyBytes))
+
+	// logger.GetLogger().Info("================ DEBUGGING SEARCH REQUEST ================")
+	// logger.GetLogger().Info(fmt.Sprintf("Request Method: %s", c.Request.Method))
+	// logger.GetLogger().Info(fmt.Sprintf("Content-Type Header: %s", c.GetHeader("Content-Type")))
+	// logger.GetLogger().Info(fmt.Sprintf("Raw Request Body: %s", string(bodyBytes)))
+	// logger.GetLogger().Info("==========================================================")
+	// // --- 结束调试 ---
+
 	var req request.ReqJobSearch
 	if err := c.ShouldBindJSON(&req); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[search_job] request parameter error: %s", err.Error()))
@@ -226,8 +271,8 @@ func (j *JobRouter) Search(c *gin.Context) {
 	}, "search success", c)
 }
 
-// @Summary Search for job logs
-// @Description Searches for job execution logs based on specified criteria.
+// @Summary 搜索任务日志
+// @Description 根据指定条件搜索任务执行日志。
 // @Tags job
 // @Accept  json
 // @Produce  json
@@ -258,8 +303,8 @@ func (j *JobRouter) SearchLog(c *gin.Context) {
 	}, "search success", c)
 }
 
-// @Summary Execute a job once
-// @Description Triggers a one-time execution of a specific job on a specific node.
+// @Summary 单次执行任务
+// @Description 在指定节点上触发指定任务的单次执行
 // @Tags job
 // @Accept  json
 // @Produce  json
@@ -300,9 +345,8 @@ func (j *JobRouter) Once(c *gin.Context) {
 	resp.OkWithMessage("job once success", c)
 }
 
-// Kill 用于处理强行终止一个正在执行的任务的请求
-// @Summary Kill a running job
-// @Description Kills a running job process by its ID and node UUID.
+// @Summary 终止运行中的任务
+// @Description 根据任务ID和节点UUID终止运行中的任务进程
 // @Tags job
 // @Accept  json
 // @Produce  json

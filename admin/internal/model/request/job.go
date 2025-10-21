@@ -10,15 +10,15 @@ type (
 		PageInfo
 		ID     int            `json:"id" form:"id"`
 		Name   string         `json:"name" form:"name"`
-		RunOn  string         `json:"run_on" form:"run_on"`
-		Type   models.JobType `json:"job_type" form:"type"`
+		RunOn  string         `json:"runOn" form:"runOn"`
+		Type   models.JobType `json:"jobType" form:"type"`
 		Status int            `json:"status" form:"status"`
 	}
 	ReqJobLogSearch struct {
 		PageInfo
 		Name     string `json:"name" form:"name"`
-		JobId    int    `json:"job_id" form:"job_id"`
-		NodeUUID string `json:"node_uuid" form:"node_uuid"`
+		JobId    int    `json:"jobId" form:"jobId"`
+		NodeUUID string `json:"nodeUuid" form:"nodeUuid"`
 		Success  *bool  `json:"success" form:"success"`
 	}
 	ReqJobUpdate struct {
@@ -26,12 +26,12 @@ type (
 		Allocation int `json:"allocation" form:"allocation" binding:"required"`
 	}
 	ReqJobOnce struct {
-		JobId    int    `json:"job_id" form:"job_id"`
-		NodeUUID string `json:"node_uuid" form:"node_uuid"`
+		JobId    int    `json:"jobId" form:"jobId"`
+		NodeUUID string `json:"nodeUuid" form:"nodeUuid"`
 	}
 	ReqJobKill struct {
-		JobId    int    `json:"job_id" form:"job_id"`
-		NodeUUID string `json:"node_uuid" form:"node_uuid"`
+		JobId    int    `json:"jobId" form:"jobId"`
+		NodeUUID string `json:"nodeUuid" form:"nodeUuid"`
 	}
 )
 
