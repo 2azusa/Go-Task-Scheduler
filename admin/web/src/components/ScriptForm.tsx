@@ -15,7 +15,7 @@ const ScriptForm = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isEditMode = !!id;
-  const [isLoading, setIsLoading] = useState(isEditMode); // 仅在编辑模式下初始加载
+  const [isLoading, setIsLoading] = useState(isEditMode);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<ScriptUpdate>();
 
@@ -24,7 +24,7 @@ const ScriptForm = () => {
       const scriptId = parseInt(id, 10);
       api.findScriptById({ id: scriptId })
         .then(scriptData => {
-          reset(scriptData); // 用获取到的数据填充表单
+          reset(scriptData);
         })
         .catch(error => {
           toast.error(`Failed to load script data: ${error.message}`);
@@ -43,7 +43,7 @@ const ScriptForm = () => {
     try {
       await api.saveScript(payload);
       toast.success(isEditMode ? "Script updated successfully!" : "Script created successfully!");
-      navigate("/scripts"); // 成功后返回列表页
+      navigate("/scripts");
     } catch (error) {
       if (error instanceof Error) toast.error(error.message);
       else toast.error("An unknown error occurred.");
@@ -82,9 +82,9 @@ const ScriptForm = () => {
               <Textarea 
                 id="command"
                 {...register("command", { required: "Script content cannot be empty" })}
-                rows={15} // 提供更大的编辑区域
+                rows={15}
                 placeholder="#!/bin/bash&#10;echo 'Hello, World!'"
-                className="font-mono" // 使用等宽字体以获得更好的代码可读性
+                className="font-mono"
               />
               {errors.command && <p className="text-destructive text-sm mt-1">{errors.command.message}</p>}
             </div>

@@ -19,25 +19,15 @@ const Login = () => {
     setIsLoading(true);
 
     try {
-      // ===================================================================================
-      // [更正] api.login() now returns the data object directly on success or throws an error on failure.
-      // The old checks for `response.code` and `response.data` are no longer needed.
-      // ===================================================================================
-
-      // 1. Await the login call. If it succeeds, `loginData` will contain the token and user.
       const loginData = await api.login({ username, password });
 
-      // 2. If the above line does not throw an error, the login was successful.
       localStorage.setItem("token", loginData.token);
       localStorage.setItem("user", JSON.stringify(loginData.user));
       toast.success("Login successful");
       
-      // Navigate to the dashboard after a successful login.
       navigate("/dashboard");
 
     } catch (error) {
-      // 3. All errors (e.g., wrong credentials, network issues) are caught here.
-      // The error message from the API is displayed in the toast.
       if (error instanceof Error) {
         toast.error(error.message);
       } else {

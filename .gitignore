@@ -70,3 +70,5 @@ _script
 admin/conf/
 
 node/conf/
+
+_mock_node

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // 1. Import useCallback
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,55 +9,22 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { api } from "@/lib/api";
 import { toast } from "sonner";
-import { JobLog, Node } from "@/types/api"; // 导入 Node 类型
+import { JobLog, Node } from "@/types/api";
 import { Activity, Search, CheckCircle2, XCircle, RotateCcw } from "lucide-react";
 
 const JobLogs = () => {
   const [logs, setLogs] = useState<JobLog[]>([]);
-  const [isLoading, setIsLoading] = useState(false); // 控制表格内加载
-  const [isInitialLoading, setIsInitialLoading] = useState(true); // 控制首次全页加载
+  const [isLoading, setIsLoading] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
-  // --- 新增 State ---
   const [allNodes, setAllNodes] = useState<Node[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all"); // "all", "true", "false"
+  const [filterStatus, setFilterStatus] = useState("all");
   const [filterNodeUuid, setFilterNodeUuid] = useState("all");
-
-  // 仅在组件首次挂载时执行，用于获取初始数据和节点列表
-  useEffect(() => {
-    const initialLoad = async () => {
-      setIsInitialLoading(true);
-      try {
-        // 并行获取初始日志和所有节点
-        const [logData, nodesData] = await Promise.all([
-          api.getJobLogs({ page: 1, pageSize: 20 }),
-          api.searchNodes({ page: 1, pageSize: 1000 }) // 获取所有节点用于筛选
-        ]);
-        setLogs(logData.list || []);
-        setTotal(logData.total);
-        setAllNodes(nodesData.list || []);
-      } catch (error) {
-        if (error instanceof Error) toast.error(`Initial load failed: ${error.message}`);
-      } finally {
-        setIsInitialLoading(false);
-      }
-    };
-    initialLoad();
-  }, []);
-
-  // 当页码变化时，重新获取数据
-  useEffect(() => {
-    // 避免在首次加载时重复获取
-    if (!isInitialLoading) {
-      fetchLogs();
-    }
-  }, [page]);
-  
-  const fetchLogs = async (resetPage = false) => {
-    // 如果是新搜索，则将页码重置为1
+  const fetchLogs = useCallback(async (resetPage = false) => {
     const currentPage = resetPage ? 1 : page;
     if (resetPage) setPage(1);
 
@@ -71,7 +38,7 @@ const JobLogs = () => {
         pageSize: 20,
         name: searchQuery || undefined,
         success,
-        nodeUuid: nodeUuid, // 适配 API 可能的类型差异
+        nodeUuid: nodeUuid,
       });
       
       setLogs(logData.list || []);
@@ -82,8 +49,35 @@ const JobLogs = () => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [page, filterStatus, filterNodeUuid, searchQuery]);
 
+
+  useEffect(() => {
+    const initialLoad = async () => {
+      setIsInitialLoading(true);
+      try {
+        const [logData, nodesData] = await Promise.all([
+          api.getJobLogs({ page: 1, pageSize: 20 }),
+          api.searchNodes({ page: 1, pageSize: 1000 })
+        ]);
+        setLogs(logData.list || []);
+        setTotal(logData.total);
+        setAllNodes(nodesData.list || []);
+      } catch (error) {
+        if (error instanceof Error) toast.error(`Initial load failed: ${error.message}`);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    initialLoad();
+  }, []);
+
+  useEffect(() => {
+    if (!isInitialLoading) {
+      fetchLogs();
+    }
+  }, [page, fetchLogs, isInitialLoading]);
+  
   const handleSearch = () => fetchLogs(true);
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') handleSearch();
@@ -92,11 +86,9 @@ const JobLogs = () => {
     setSearchQuery("");
     setFilterStatus("all");
     setFilterNodeUuid("all");
-    // 确保状态更新后再触发搜索
-    setTimeout(() => fetchLogs(true), 0);
+    fetchLogs(true); 
   };
 
-  // --- UI 辅助函数 ---
   const formatDate = (ts: number) => ts ? new Date(ts * 1000).toLocaleString() : 'N/A';
   const formatDuration = (start: number, end: number) => {
     if (!start || !end || end < start) return 'N/A';

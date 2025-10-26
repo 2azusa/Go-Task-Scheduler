@@ -46,7 +46,6 @@ const App = () => (
             <Route path="/scripts" element={<Scripts />} />
             <Route path="/scripts/:id/edit" element={<ScriptForm />} />
           </Route>
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

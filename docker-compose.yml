@@ -39,6 +39,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./_mock_node/docker_conf/node1.json:/app/node/conf/testing/node1.json
+      - ./_mock_node/docker_runtime/node1:/app/logs
     command: ["--environment=testing", "--configfilename=node1"]
     networks:
       - pulse-net
@@ -60,6 +61,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./_mock_node/docker_conf/node2.json:/app/node/conf/testing/node2.json
+      - ./_mock_node/docker_runtime/node2:/app/logs
     command: ["--environment=testing", "--configfilename=node2"]
     networks:
       - pulse-net
@@ -81,6 +83,7 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./_mock_node/docker_conf/node3.json:/app/node/conf/testing/node3.json
+      - ./_mock_node/docker_runtime/node3:/app/logs
     command: ["--environment=testing", "--configfilename=node3"]
     networks:
       - pulse-net
@@ -102,7 +105,96 @@ services:
       - "host.docker.internal:host-gateway"
     volumes:
       - ./_mock_node/docker_conf/node4.json:/app/node/conf/testing/node4.json
+      - ./_mock_node/docker_runtime/node4:/app/logs
     command: ["--environment=testing", "--configfilename=node4"]
+    networks:
+      - pulse-net
+#    depends_on:
+#      - etcd
+#      - mariadb
+
+  node5:
+      build:
+        context: .
+        dockerfile: node.Dockerfile
+        args:
+          - HTTP_PROXY=http://host.docker.internal:7890
+          - HTTPS_PROXY=http://host.docker.internal:7890
+          - NO_PROXY=localhost,127.0.0.1
+        extra_hosts:
+          - "host.docker.internal:host-gateway"
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+      volumes:
+        - ./_mock_node/docker_conf/node5.json:/app/node/conf/testing/node5.json
+        - ./_mock_node/docker_runtime/node5:/app/logs
+      command: ["--environment=testing", "--configfilename=node5"]
+      networks:
+        - pulse-net
+  #    depends_on:
+  #      - etcd
+  #      - mariadb
+
+  node6:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+      args:
+        - HTTP_PROXY=http://host.docker.internal:7890
+        - HTTPS_PROXY=http://host.docker.internal:7890
+        - NO_PROXY=localhost,127.0.0.1
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./_mock_node/docker_conf/node6.json:/app/node/conf/testing/node6.json
+      - ./_mock_node/docker_runtime/node6:/app/logs
+    command: ["--environment=testing", "--configfilename=node6"]
+    networks:
+      - pulse-net
+#    depends_on:
+#      - etcd
+#      - mariadb
+      
+  node7:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+      args:
+        - HTTP_PROXY=http://host.docker.internal:7890
+        - HTTPS_PROXY=http://host.docker.internal:7890
+        - NO_PROXY=localhost,127.0.0.1
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./_mock_node/docker_conf/node7.json:/app/node/conf/testing/node7.json
+      - ./_mock_node/docker_runtime/node7:/app/logs
+    command: ["--environment=testing", "--configfilename=node7"]
+    networks:
+      - pulse-net
+#    depends_on:
+#      - etcd
+#      - mariadb
+
+  node8:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+      args:
+        - HTTP_PROXY=http://host.docker.internal:7890
+        - HTTPS_PROXY=http://host.docker.internal:7890
+        - NO_PROXY=localhost,127.0.0.1
+      extra_hosts:
+        - "host.docker.internal:host-gateway"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ./_mock_node/docker_conf/node8.json:/app/node/conf/testing/node8.json
+      - ./_mock_node/docker_runtime/node8:/app/logs
+    command: ["--environment=testing", "--configfilename=node8"]
     networks:
       - pulse-net
 #    depends_on:

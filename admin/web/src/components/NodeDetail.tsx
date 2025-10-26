@@ -47,7 +47,6 @@ const NodeDetail = () => {
     );
   }
 
-  // 使用可选链来安全地解构，以防万一
   const { os, cpu, ram, disk } = systemInfo;
 
   return (
@@ -65,7 +64,6 @@ const NodeDetail = () => {
           <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Server className="h-5 w-5"/> OS & Machine</CardTitle></CardHeader>
               <CardContent className="space-y-2 text-sm">
-                  {/* [修正] 使用可选链 ?. 来安全访问属性 */}
                   <div className="flex justify-between"><span>OS:</span><span className="font-semibold">{os?.goos || 'N/A'}</span></div>
                   <div className="flex justify-between"><span>Go Version:</span><span className="font-mono text-xs">{os?.goVersion || 'N/A'}</span></div>
                   <div className="flex justify-between"><span>Goroutines:</span><span className="font-semibold">{os?.numGoroutine || 'N/A'}</span></div>
@@ -74,11 +72,6 @@ const NodeDetail = () => {
           <Card>
               <CardHeader><CardTitle className="flex items-center gap-2"><Cpu className="h-5 w-5"/> CPU ({cpu?.cores || 0} Cores)</CardTitle></CardHeader>
               <CardContent className="space-y-2">
-                  {/* 
-                    [修正] 这是关键的修复点。
-                    使用 (cpu?.cpus ?? []) 来确保 .map 总是运行在一个数组上。
-                    如果 cpu 或 cpu.cpus 为 null/undefined，它将使用一个空数组 []，从而避免崩溃。
-                  */}
                   {(cpu?.cpus ?? []).length > 0 ? (
                     (cpu.cpus).map((coreUsage, index) => (
                         <div key={index} className="flex items-center gap-4 text-sm">

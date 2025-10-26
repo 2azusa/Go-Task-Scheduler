@@ -31,9 +31,7 @@ import type {
   ScriptFind,
 } from "@/types/api"
 
-// const API_BASE_URL = "/api";
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"
+const API_BASE_URL = "/api";
 
 /**
  * API 客户端，用于与后端服务进行交互
@@ -55,9 +53,6 @@ class ApiClient {
    * @returns {Promise<T>} 返回一个 Promise，解析为 API 响应中的 data 字段
    * @throws {Error} 如果网络请求失败、响应状态码不是 2xx 或业务码不为 200
    */
-  // ===================================================================================
-  // [更正 1] 修改 request 方法的返回类型签名，去掉 ApiResponse 包装
-  // ===================================================================================
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
@@ -110,10 +105,6 @@ class ApiClient {
       throw error; // 重新抛出错误，让调用方可以捕获
     }
   }
-
-  // ===================================================================================
-  // [更正 2] 更新所有公共 API 方法的返回类型，使其与 request 的新返回类型一致
-  // ===================================================================================
 
   // Auth APIs
   async login(data: Login): Promise<ApiLoginResponse["data"]> {

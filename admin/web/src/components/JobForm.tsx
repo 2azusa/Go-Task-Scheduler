@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { api } from "@/lib/api";
-import { JobUpdate, JobType, Allocation, NotifyType, User, Node, Script, HttpMethod } from "@/types/api"; // 导入新类型
+import { JobUpdate, JobType, Allocation, NotifyType, User, Node, Script, HttpMethod } from "@/types/api";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Badge } from "@/components/ui/badge";
 import { Activity, ArrowLeft, ChevronsUpDown, Check, X } from "lucide-react";
 
-// 定义一个更精确的表单数据类型
 type JobFormData = Omit<JobUpdate, 'jobType' | 'allocation' | 'notifyType' | 'httpMethod'> & {
   jobType: string;
   allocation: string;
@@ -28,7 +27,6 @@ const JobForm = () => {
   const navigate = useNavigate();
   const isEditMode = !!id;
 
-  // --- 统一管理所有下拉列表的数据 ---
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [allNodes, setAllNodes] = useState<Node[]>([]);
   const [allScripts, setAllScripts] = useState<Script[]>([]);
@@ -50,14 +48,12 @@ const JobForm = () => {
   const watchedJobType = watch('jobType');
   const watchedAllocation = watch('allocation');
 
-  // 当 jobType 变化时，自动调整 allocation
   useEffect(() => {
     if (watchedJobType === String(JobType.JobTypeCmd)) {
       setValue('allocation', String(Allocation.ManualAllocation));
     }
   }, [watchedJobType, setValue]);
 
-  // 并行获取所有初始化数据
   useEffect(() => {
     Promise.all([
       api.searchUsers({ pageSize: 1000 }),
@@ -101,7 +97,6 @@ const JobForm = () => {
       retryInterval: Number(data.retryInterval) || 0,
       notifyTo: data.notifyTo,
       scriptId: data.scriptId,
-      // 仅当类型为 HTTP 时才提交 httpMethod
       httpMethod: watchedJobType === String(JobType.JobTypeHttp) ? Number(data.httpMethod) as HttpMethod : undefined,
     };
 
@@ -125,13 +120,11 @@ const JobForm = () => {
         <CardHeader><CardTitle>{isEditMode ? "Edit Job" : "Create New Job"}</CardTitle><CardDescription>Fill out the form to configure the job.</CardDescription></CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-            {/* --- 主配置 --- */}
             <div className="grid md:grid-cols-2 gap-6">
               <div><Label htmlFor="name">Job Name</Label><Input id="name" {...register("name", { required: "Name is required" })} />{errors.name && <p className="text-destructive text-sm mt-1">{errors.name.message}</p>}</div>
               <div><Label htmlFor="spec">Schedule (Cron)</Label><Input id="spec" {...register("spec", { required: "Cron spec is required" })} placeholder="* * * * *" />{errors.spec && <p className="text-destructive text-sm mt-1">{errors.spec.message}</p>}</div>
               <div><Label>Job Type</Label><Controller name="jobType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={String(JobType.JobTypeCmd)}>Shell</SelectItem><SelectItem value={String(JobType.JobTypeHttp)}>HTTP</SelectItem></SelectContent></Select>)} /></div>
               
-              {/* --- 条件性 HTTP Method --- */}
               {watchedJobType === String(JobType.JobTypeHttp) && (
                 <div>
                   <Label>HTTP Method</Label>
@@ -143,12 +136,10 @@ const JobForm = () => {
               <div className="col-span-full"><Label htmlFor="command">Command / URL</Label><Textarea id="command" {...register("command", { required: "Command or URL is required" })} rows={4} />{errors.command && <p className="text-destructive text-sm mt-1">{errors.command.message}</p>}</div>
             </div>
             
-            {/* --- 分配与执行 --- */}
             <h3 className="text-lg font-semibold pt-4 border-t">Allocation & Execution</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div><Label>Allocation</Label><Controller name="allocation" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value} disabled={watchedJobType === String(JobType.JobTypeCmd)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={String(Allocation.ManualAllocation)}>Manual</SelectItem><SelectItem value={String(Allocation.AutoAllocation)}>Auto</SelectItem></SelectContent></Select>)} /></div>
               
-              {/* --- [新增] Node Combobox --- */}
               <div>
                 <Label htmlFor="runOn">Run On Node</Label>
                 <Controller name="runOn" control={control} rules={{ required: watchedAllocation === String(Allocation.ManualAllocation) ? "Node is required for Manual allocation" : false }} render={({ field }) => (
@@ -161,7 +152,6 @@ const JobForm = () => {
                 {errors.runOn && <p className="text-destructive text-sm mt-1">{errors.runOn.message}</p>}
               </div>
 
-              {/* --- [新增] 关联脚本 --- */}
               <div className="col-span-full"><Label>Associated Scripts</Label><Controller control={control} name="scriptId" render={({ field }) => (
                   <Popover><PopoverTrigger asChild><Button variant="outline" role="combobox" className="w-full justify-between h-auto min-h-10 flex-wrap"><div className="flex gap-1 flex-wrap">{field.value?.length > 0 ? allScripts.filter(s => field.value.includes(s.id)).map(s => (<Badge key={s.id} variant="secondary">{s.name}<button className="ml-1" onMouseDown={(e) => e.preventDefault()} onClick={() => field.onChange(field.value.filter(id => id !== s.id))}><X className="h-3 w-3" /></button></Badge>)) : <span>Select scripts...</span>}</div><ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" /></Button></PopoverTrigger>
                     <PopoverContent className="w-[--radix-popover-trigger-width] p-0"><Command><CommandInput placeholder="Search script..." /><CommandList><CommandEmpty>No script found.</CommandEmpty><CommandGroup>
@@ -171,7 +161,6 @@ const JobForm = () => {
               )} /></div>
             </div>
 
-            {/* --- 超时与重试 --- */}
             <h3 className="text-lg font-semibold pt-4 border-t">Timeout & Retries</h3>
             <div className="grid md:grid-cols-3 gap-6">
               <div><Label htmlFor="timeout">Timeout (seconds)</Label><Input id="timeout" type="number" {...register("timeout")} placeholder="0 for no timeout"/></div>
@@ -179,7 +168,6 @@ const JobForm = () => {
               <div><Label htmlFor="retryInterval">Retry Interval (seconds)</Label><Input id="retryInterval" type="number" {...register("retryInterval")} /></div>
             </div>
 
-            {/* --- 通知 --- */}
             <h3 className="text-lg font-semibold pt-4 border-t">Notifications</h3>
             <div className="grid md:grid-cols-2 gap-6">
               <div><Label>Notify Type</Label><Controller name="notifyType" control={control} render={({ field }) => (<Select onValueChange={field.onChange} value={field.value}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value={String(NotifyType.NotifyTypeMail)}>Email</SelectItem><SelectItem value={String(NotifyType.NotifyTypeWebHook)}>Webhook</SelectItem></SelectContent></Select>)} /></div>
@@ -193,7 +181,6 @@ const JobForm = () => {
               <div className="col-span-full"><Label htmlFor="note">Notes (Optional)</Label><Textarea id="note" {...register("note")} /></div>
             </div>
 
-            {/* --- 提交按钮 --- */}
             <div className="flex justify-end gap-2 pt-4"><Button type="button" variant="ghost" onClick={() => navigate(isEditMode ? `/jobs/${id}`: "/jobs")}>Cancel</Button><Button type="submit">{isEditMode ? "Save Changes" : "Create Job"}</Button></div>
           </form>
         </CardContent>

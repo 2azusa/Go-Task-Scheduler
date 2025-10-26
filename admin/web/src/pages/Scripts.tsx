@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,20 +17,7 @@ const Scripts = () => {
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchScripts();
-  }, [page]);
-
-  const handleSearch = () => {
-    setPage(1);
-    fetchScripts();
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter') handleSearch();
-  };
-
-  const fetchScripts = async () => {
+  const fetchScripts = useCallback(async () => {
     setIsLoading(true);
     try {
       const scriptsData = await api.searchScripts({ page, pageSize: 12, name: searchQuery || undefined });
@@ -42,6 +29,19 @@ const Scripts = () => {
     } finally {
       setIsLoading(false);
     }
+  }, [page, searchQuery]);
+
+  useEffect(() => {
+    fetchScripts();
+  }, [fetchScripts]);
+
+  const handleSearch = () => {
+    setPage(1);
+    fetchScripts();
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === 'Enter') handleSearch();
   };
 
   const handleDelete = async (scriptId: number, scriptName: string) => {
@@ -86,14 +86,13 @@ const Scripts = () => {
             <Button onClick={handleSearch}>Search</Button>
           </div>
 
-          {isLoading ? (<div className="text-center py-12"><Activity className="h-6 w-6 animate-spin text-primary mx-auto" /></div>) : 
-           scripts.length === 0 ? (<div className="text-center py-12"><p className="text-muted-foreground">No scripts found.</p></div>) : 
+          {isLoading ? (<div className="text-center py-12"><Activity className="h-6 w-6 animate-spin text-primary mx-auto" /></div>) :
+           scripts.length === 0 ? (<div className="text-center py-12"><p className="text-muted-foreground">No scripts found.</p></div>) :
            (<div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {scripts.map((script) => (
                 <Card key={script.id} className="hover:border-primary/50 transition-colors flex flex-col">
-                  {/* [更新] CardHeader 现在可点击以查看详情 */}
-                  <CardHeader 
-                    className="cursor-pointer" 
+                  <CardHeader
+                    className="cursor-pointer"
                     onClick={() => navigate(`/scripts/${script.id}`)}
                   >
                     <div className="flex items-start justify-between"><CardTitle className="text-base break-all">{script.name}</CardTitle><Badge variant="outline" className="text-xs shrink-0 ml-2">#{script.id}</Badge></div>
@@ -103,7 +102,6 @@ const Scripts = () => {
                     <pre className="text-xs bg-secondary p-3 rounded-lg overflow-x-auto max-h-24 cursor-pointer" onClick={() => navigate(`/scripts/${script.id}`)}>
                       <code>{script.command.substring(0, 100)}{script.command.length > 100 && "..."}</code>
                     </pre>
-                    {/* [更新] 恢复独立的 Edit 和 Delete 按钮 */}
                     <div className="flex gap-2 mt-4">
                       <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/scripts/${script.id}/edit`)}>
                         <Pencil className="h-3 w-3 mr-1" /> Edit

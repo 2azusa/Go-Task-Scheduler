@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react"; // 1. Import useCallback
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,24 +20,19 @@ const Jobs = () => {
   const navigate = useNavigate();
   
   const [searchQuery, setSearchQuery] = useState("");
-  // [修正] 1. 将初始状态从 "" 改为 "all"
   const [filterStatus, setFilterStatus] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
 
-  useEffect(() => {
-    fetchJobs();
-  }, [page]);
-
-  const fetchJobs = async (resetPage = false) => {
-    if (resetPage) setPage(1);
+  const fetchJobs = useCallback(async (resetPage = false) => {
     setIsLoading(true);
     try {
       const currentPage = resetPage ? 1 : page;
+      if (resetPage) setPage(1);
+
       const jobsData = await api.searchJobs({
         page: currentPage,
         pageSize: 10,
         name: searchQuery || undefined,
-        // [修正] 3. 检查值是否为 "all"，如果是则不传递参数
         status: filterStatus !== "all" ? Number(filterStatus) as JobStatus : undefined,
         type: filterType !== "all" ? Number(filterType) as JobType : undefined,
       });
@@ -51,29 +46,27 @@ const Jobs = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-  
+  }, [page, searchQuery, filterStatus, filterType]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
+
   const handleSearch = () => {
     fetchJobs(true);
   };
 
   const handleResetFilters = () => {
     setSearchQuery("");
-    // [修正] 4. 将状态重置为 "all"
     setFilterStatus("all");
     setFilterType("all");
-    
-    // 使用 setTimeout 确保状态更新后再触发搜索
-    setTimeout(() => {
-        fetchJobs(true);
-    }, 0);
+    fetchJobs(true);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') handleSearch();
   };
 
-  // --- 操作和UI辅助函数 (保持不变) ---
   const handleExecute = async (job: Job) => {
     if (window.confirm(`Are you sure you want to execute "${job.name}" immediately?`)) {
       try {
@@ -120,7 +113,7 @@ const Jobs = () => {
     return type === JobType.JobTypeCmd ? <Badge variant="outline">Shell</Badge> : <Badge variant="outline">HTTP</Badge>;
   };
 
-  if (isLoading && page === 1 && jobs.length === 0) {
+  if (isLoading && jobs.length === 0) {
     return <div className="flex items-center justify-center h-full"><Activity className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
@@ -158,7 +151,6 @@ const Jobs = () => {
             <Select value={filterStatus} onValueChange={setFilterStatus}>
               <SelectTrigger><SelectValue placeholder="Filter by Status" /></SelectTrigger>
               <SelectContent>
-                {/* [修正] 2. 将 value 从 "" 改为 "all" */}
                 <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value={String(JobStatus.JobStatusAssigned)}>Assigned</SelectItem>
                 <SelectItem value={String(JobStatus.JobStatusNotAssigned)}>Not Assigned</SelectItem>
@@ -167,7 +159,6 @@ const Jobs = () => {
              <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger><SelectValue placeholder="Filter by Type" /></SelectTrigger>
               <SelectContent>
-                 {/* [修正] 2. 将 value 从 "" 改为 "all" */}
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value={String(JobType.JobTypeCmd)}>Shell</SelectItem>
                 <SelectItem value={String(JobType.JobTypeHttp)}>HTTP</SelectItem>
@@ -193,9 +184,9 @@ const Jobs = () => {
                     </TableRow>
                 </TableHeader>
                 <TableBody>
-                {isLoading ? (
+                {isLoading && jobs.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8"><Activity className="h-6 w-6 animate-spin text-primary mx-auto" /></TableCell></TableRow>
-                ) : jobs.length === 0 ? (
+                ) : !isLoading && jobs.length === 0 ? (
                   <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No jobs found.</TableCell></TableRow>
                 ) : (
                   jobs.map((job) => (
@@ -226,8 +217,8 @@ const Jobs = () => {
             <div className="flex items-center justify-between mt-4">
               <p className="text-sm text-muted-foreground">Showing {Math.min((page - 1) * 10 + 1, total)} to {Math.min(page * 10, total)} of {total} jobs</p>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={() => setPage(page - 1)} disabled={page === 1}>Previous</Button>
-                <Button variant="outline" size="sm" onClick={() => setPage(page + 1)} disabled={page * 10 >= total}>Next</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p - 1)} disabled={page === 1}>Previous</Button>
+                <Button variant="outline" size="sm" onClick={() => setPage(p => p + 1)} disabled={page * 10 >= total}>Next</Button>
               </div>
             </div>
           )}

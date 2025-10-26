@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "@/lib/api";
-import { Job, JobLog, User, Script, JobType, HttpMethod } from "@/types/api"; // 导入新类型
+import { Job, JobLog, User, Script, JobType, HttpMethod } from "@/types/api";
 import { toast } from "sonner";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -20,13 +20,11 @@ const JobDetail = () => {
   const [job, setJob] = useState<Job | null>(null);
   const [logs, setLogs] = useState<JobLog[]>([]);
   const [notifiedUsers, setNotifiedUsers] = useState<User[]>([]);
-  // --- [新增] 关联脚本 State ---
   const [associatedScripts, setAssociatedScripts] = useState<Script[]>([]);
   
   const [isLoadingJob, setIsLoadingJob] = useState(true);
   const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
-  // --- [新增] 脚本加载 State ---
   const [isLoadingScripts, setIsLoadingScripts] = useState(false);
 
   const [logPage, setLogPage] = useState(1);
@@ -41,10 +39,8 @@ const JobDetail = () => {
     if (jobId) fetchJobLogs();
   }, [jobId, logPage, logStatusFilter]);
 
-  // 当 job 加载成功后，并行获取关联的用户和脚本
   useEffect(() => {
     const fetchAssociatedData = () => {
-      // 获取用户
       if (job?.notifyTo && job.notifyTo.length > 0) {
         setIsLoadingUsers(true);
         const userPromises = job.notifyTo.map(userId => api.findUserById({ id: userId }));
@@ -58,7 +54,6 @@ const JobDetail = () => {
           .finally(() => setIsLoadingUsers(false));
       }
 
-      // --- [新增] 获取脚本 ---
       if (job?.scriptId && job.scriptId.length > 0) {
         setIsLoadingScripts(true);
         const scriptPromises = job.scriptId.map(scriptId => api.findScriptById({ id: scriptId }));
@@ -136,7 +131,6 @@ const JobDetail = () => {
             <div className="space-y-1"><p className="text-muted-foreground">Schedule (Cron)</p><p className="font-mono">{job.spec}</p></div>
             <div className="space-y-1"><p className="text-muted-foreground">Job Type</p><p>{job.jobType === JobType.JobTypeCmd ? "Shell" : "HTTP"}</p></div>
             
-            {/* --- [新增] 条件性显示 HTTP Method --- */}
             {job.jobType === JobType.JobTypeHttp && (
                 <div className="space-y-1">
                     <p className="text-muted-foreground">HTTP Method</p>
@@ -156,7 +150,6 @@ const JobDetail = () => {
                (<p className="text-sm text-muted-foreground">None</p>)}
             </div>
 
-            {/* --- [新增] 显示关联脚本 --- */}
             <div className="col-span-full space-y-1">
                 <p className="text-muted-foreground">Associated Scripts</p>
                 {isLoadingScripts ? (<p className="text-sm text-muted-foreground">Loading...</p>) :
@@ -169,7 +162,6 @@ const JobDetail = () => {
         </CardContent>
       </Card>
       
-      {/* 日志卡片部分保持不变 */}
       <Card>
         <CardHeader><div className="flex justify-between items-center"><CardTitle>Execution Logs</CardTitle><div className="w-[180px]"><Select value={logStatusFilter} onValueChange={handleFilterChange}><SelectTrigger><SelectValue placeholder="Filter by status..." /></SelectTrigger><SelectContent><SelectItem value="all">All Statuses</SelectItem><SelectItem value="true">Success</SelectItem><SelectItem value="false">Failed</SelectItem></SelectContent></Select></div></div></CardHeader>
         <CardContent>
