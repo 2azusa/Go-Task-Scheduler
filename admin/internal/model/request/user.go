@@ -12,7 +12,7 @@ type (
 		Role     int    `json:"role" form:"role"`
 	}
 	ReqUserUpdate struct {
-		UserName *string `json:"username" form:"username"`
+		UserName *string `json:"username" form:"username" binding:"required,min=2,max=20"`
 		Email    *string `json:"email" form:"email"`
 		Role     *int    `json:"role" form:"role"`
 	}

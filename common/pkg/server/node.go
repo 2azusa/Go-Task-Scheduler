@@ -17,12 +17,12 @@ import (
 // 节点服务器的命令行启动参数
 var NodeOptions struct {
 	flags.Options
-	Environment    string
-	Version        bool
-	EnablePProfile bool
-	PProfilePort   int
-	ConfigFileName string
-	EnableDevMode  bool
+	Environment    string `short:"e" long:"environment" description:"Use NodeServer environment"`
+	Version        bool   `short:"v" long:"version"  description:"Show NodeServer version"`
+	EnablePProfile bool   `short:"p" long:"enable-pprof"  description:"enable pprof"`
+	PProfilePort   int    `short:"d" long:"pprof-port"  description:"pprof port" default:"8288"`
+	ConfigFileName string `short:"c" long:"configfilename" description:"Use NodeServer config file"`
+	EnableDevMode  bool   `short:"m" long:"enable-dev-mode"  description:"enable dev mode"`
 }
 
 // 初始化节点服务器

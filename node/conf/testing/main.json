@@ -35,21 +35,21 @@
     "req-timeout": 5
   },
   "email": {
-    "port": 465,
-    "from": "from",
-    "host": "smtp.qq.com",
+    "port": 587,
+    "from": "tszhotang77@gmail.com",
+    "host": "smtp.gmail.com",
     "is-ssl": true,
-    "secret": "secret",
+    "secret": "pknhnsebzwuonfrz",
     "nickname": "Pulse 定时任务平台",
     "#to": "Email default notification object",
-    "to": ["test@qq.com"]
+    "to": ["tszhotang7@gmail.com"]
   },
   "webhook": {
-    "url": "url",
-    "kind": ""
+    "url": "url", 
+    "kind": "feishu"
   },
   "log": {
-    "level": "debug",
+    "level": "warn",
     "format": "console",
     "prefix": "[pulse-node]",
     "director": "logs",

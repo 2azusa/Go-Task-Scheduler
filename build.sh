@@ -44,6 +44,6 @@ echo "building web..."
 cd $WebFile
 yarn install
 yarn build
-mv ./dist ../../bin/
+mv ./dist ../../
 
 echo "build success."

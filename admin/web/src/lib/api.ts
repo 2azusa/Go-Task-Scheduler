@@ -1,25 +1,37 @@
 import type {
   ApiResponse,
-  LoginRequest,
-  LoginResponse,
-  RegisterRequest,
+  PageResult,
   User,
-  UserSearchRequest,
   Job,
   JobLog,
-  JobSearchRequest,
-  JobLogSearchRequest,
-  NodeSearchResult,
-  NodeSearchRequest,
+  Node,
   Script,
-  ScriptSearchRequest,
-  SystemStatistics,
+  TodayStatistics,
   WeekStatistics,
-  ServerInfo,
-  PageResult,
-} from "@/types/api";
+  SystemInfo,
+  LoginResponse as ApiLoginResponse,
+  Login,
+  Register,
+  ChangePassword,
+  UserSearch,
+  UserUpdate,
+  Delete,
+  JobSearch,
+  JobUpdate,
+  JobLogSearch,
+  JobOnce,
+  JobKill,
+  NodeSearch,
+  ScriptSearch,
+  ScriptUpdate,
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api";
+  GetSystem,
+  UserFind,
+  JobFind,
+  ScriptFind,
+} from "@/types/api"
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "/api"
 
 /**
  * API 客户端，用于与后端服务进行交互
@@ -38,20 +50,22 @@ class ApiClient {
    * @template T - 期望的响应数据类型
    * @param {string} endpoint - API 的端点路径
    * @param {RequestInit} [options={}] - fetch 请求的配置选项
-   * @returns {Promise<ApiResponse<T>>} 返回一个 Promise，解析为 API 响应
-   * @throws {Error} 如果网络请求失败或响应状态码不是 2xx
+   * @returns {Promise<T>} 返回一个 Promise，解析为 API 响应中的 data 字段
+   * @throws {Error} 如果网络请求失败、响应状态码不是 2xx 或业务码不为 200
    */
+  // ===================================================================================
+  // [更正 1] 修改 request 方法的返回类型签名，去掉 ApiResponse 包装
+  // ===================================================================================
   private async request<T>(
     endpoint: string,
     options: RequestInit = {}
-  ): Promise<ApiResponse<T>> {
+  ): Promise<T> {
     const token = this.getToken();
     const headers: HeadersInit = {
       "Content-Type": "application/json",
       ...options.headers,
     };
 
-    // 如果 token 存在且不是登录或注册接口，则添加 Authorization 头
     if (token && !endpoint.includes("/login") && !endpoint.includes("/register")) {
       headers["Authorization"] = `Bearer ${token}`;
     }
@@ -65,40 +79,49 @@ class ApiClient {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("API 请求失败，状态码:", response.status, "响应:", errorText);
-      throw new Error(`请求失败，状态码 ${response.status}`);
+      console.error(`API 请求失败，状态码: ${response.status}`, { endpoint, errorText });
+      throw new Error(`网络请求错误 (状态码: ${response.status})`);
     }
 
+    // 克隆响应以防解析失败后需要再次读取
     const responseClone = response.clone();
     try {
-      return await response.json();
+      const apiResponse: ApiResponse<T> = await response.json();
+
+      // 在这里集中处理业务状态码
+      if (apiResponse.code === 200) {
+        // 成功，直接返回核心数据 data，这匹配了新的 Promise<T> 返回类型
+        return apiResponse.data;
+      } else {
+        // 业务逻辑失败，抛出后端提供的错误信息
+        throw new Error(apiResponse.msg || "API 返回未知错误");
+      }
     } catch (error) {
-      console.error("Failed to parse JSON response:", error);
-      const text = await responseClone.text();
-      console.error("Raw response text:", text);
-      throw error;
+      // 捕获上面抛出的错误或 JSON 解析错误
+      console.error("API 响应处理失败:", error);
+      if (error instanceof SyntaxError) {
+        // 如果是 JSON 解析错误，尝试打印原始文本
+        const rawText = await responseClone.text();
+        console.error("原始响应文本:", rawText);
+        throw new Error("无法解析服务器响应");
+      }
+      throw error; // 重新抛出错误，让调用方可以捕获
     }
   }
 
+  // ===================================================================================
+  // [更正 2] 更新所有公共 API 方法的返回类型，使其与 request 的新返回类型一致
+  // ===================================================================================
+
   // Auth APIs
-  /**
-   * 用户登录
-   * @param {LoginRequest} data - 用户的登录凭据
-   * @returns {Promise<ApiResponse<LoginResponse>>} 返回一个 Promise，该 Promise 解析为包含 token 的登录响应
-   */
-  async login(data: LoginRequest): Promise<ApiResponse<LoginResponse>> {
-    return this.request<LoginResponse>("/login", {
+  async login(data: Login): Promise<ApiLoginResponse["data"]> {
+    return this.request<ApiLoginResponse["data"]>("/login", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 注册一个新用户
-   * @param {RegisterRequest} data - 用户的注册信息
-   * @returns {Promise<ApiResponse<User>>} 返回一个 Promise，该 Promise 解析为新创建的用户信息
-   */
-  async register(data: RegisterRequest): Promise<ApiResponse<User>> {
+  async register(data: Register): Promise<User> {
     return this.request<User>("/register", {
       method: "POST",
       body: JSON.stringify(data),
@@ -106,290 +129,159 @@ class ApiClient {
   }
 
   // User APIs
-  /**
-   * 获取当前登录用户的信息
-   * @returns {Promise<ApiResponse<User>>} 返回一个 Promise，该 Promise 解析为当前用户的数据
-   */
-  async getCurrentUser(): Promise<ApiResponse<User>> {
+  async getCurrentUser(): Promise<User> {
     return this.request<User>("/user/find");
   }
 
-  /**
-   * 根据指定条件搜索用户
-   * @param {UserSearchRequest} data - 用户的搜索条件
-   * @returns {Promise<ApiResponse<PageResult<User>>>} 返回一个 Promise，该 Promise 解析为用户的分页列表
-   */
-  async searchUsers(
-    data: UserSearchRequest
-  ): Promise<ApiResponse<PageResult<User>>> {
+  async findUserById(data: UserFind): Promise<User> {
+    return this.request<User>("/user/find", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async searchUsers(data: UserSearch): Promise<PageResult<User>> {
     return this.request<PageResult<User>>("/user/search", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 更新用户信息
-   * @param {Partial<User> & { id: number }} data - 要更新的用户信息 (至少需要包含 id)
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在用户信息更新后解析
-   */
-  async updateUser(
-    data: Partial<User> & { id: number }
-  ): Promise<ApiResponse<void>> {
-    return this.request<void>("/user/update", {
+  async updateUser(data: UserUpdate): Promise<object> {
+    return this.request<object>("/user/update", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 更新当前用户的密码
-   * @param {string} password - 当前密码
-   * @param {string} newPassword - 新密码
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在密码更新后解析
-   */
-  async updatePassword(
-    password: string,
-    newPassword: string
-  ): Promise<ApiResponse<void>> {
-    return this.request<void>("/user/change_pw", {
+  async updatePassword(data: ChangePassword): Promise<object> {
+    return this.request<object>("/user/change_pw", {
       method: "POST",
-      body: JSON.stringify({ password, newPassword }),
+      body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 删除一个或多个用户
-   * @param {number[]} ids - 要删除的用户 ID 数组
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在用户被删除后解析
-   */
-  async deleteUsers(ids: number[]): Promise<ApiResponse<void>> {
-    return this.request<void>("/user/del", {
+  async deleteUsers(data: Delete): Promise<object> {
+    return this.request<object>("/user/del", {
       method: "POST",
-      body: JSON.stringify({ ids }),
+      body: JSON.stringify(data),
     });
   }
 
   // Job APIs
-  /**
-   * 根据指定条件搜索任务
-   * @param {JobSearchRequest} data - 任务的搜索条件
-   * @returns {Promise<ApiResponse<PageResult<Job>>>} 返回一个 Promise，该 Promise 解析为任务的分页列表
-   */
-  async searchJobs(data: JobSearchRequest): Promise<ApiResponse<PageResult<Job>>> {
+  async searchJobs(data: JobSearch): Promise<PageResult<Job>> {
     return this.request<PageResult<Job>>("/job/search", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 根据 ID 查找任务
-   * @param {number} id - 要查找的任务 ID
-   * @returns {Promise<ApiResponse<Job>>} 返回一个 Promise，该 Promise 解析为找到的任务
-   */
-  async findJobById(id: number): Promise<ApiResponse<Job>> {
-    const params = new URLSearchParams({ id: id.toString() });
-    return this.request<Job>(`/job/find?${params.toString()}`);
+  async findJobById(data: JobFind): Promise<Job> {
+    return this.request<Job>(`/job/find?`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
-  /**
-   * 创建一个新任务
-   * @param {Partial<Job>} data - 要创建的任务的详细信息
-   * @returns {Promise<ApiResponse<Job>>} 返回一个 Promise，该 Promise 解析为新创建的任务
-   */
-  async createJob(data: Partial<Job>): Promise<ApiResponse<Job>> {
+  // 传入id则更新指定任务信息
+  // 无id则创建新任务
+  async saveJob(data: JobUpdate): Promise<Job> {
     return this.request<Job>("/job/add", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 更新一个现有任务
-   * @param {Partial<Job>} data - 任务的更新信息
-   * @returns {Promise<ApiResponse<Job>>} 返回一个 Promise，该 Promise 解析为更新后的任务
-   */
-  async updateJob(data: Partial<Job>): Promise<ApiResponse<Job>> {
-    return this.request<Job>("/job/add", {
+  async deleteJobs(data: Delete): Promise<object> {
+    return this.request<object>("/job/del", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 删除一个或多个任务
-   * @param {number[]} ids - 要删除的任务 ID 数组
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在任务被删除后解析
-   */
-  async deleteJobs(ids: number[]): Promise<ApiResponse<void>> {
-    return this.request<void>("/job/del", {
-      method: "POST",
-      body: JSON.stringify({ ids }),
-    });
-  }
-
-  /**
-   * 获取任务的执行日志
-   * @param {JobLogSearchRequest} data - 获取任务日志的查询条件
-   * @returns {Promise<ApiResponse<PageResult<JobLog>>>} 返回一个 Promise，该 Promise 解析为任务日志的分页列表
-   */
-  async getJobLogs(
-    data: JobLogSearchRequest
-  ): Promise<ApiResponse<PageResult<JobLog>>> {
+  async getJobLogs(data: JobLogSearch): Promise<PageResult<JobLog>> {
     return this.request<PageResult<JobLog>>("/job/log", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 在指定节点上单次执行任务
-   * @param {number} jobId - 要执行的任务 ID
-   * @param {string} nodeUuid - 执行任务的节点 UUID
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在任务执行被触发后解析
-   */
-  async executeJobOnce(
-    jobId: number,
-    nodeUuid: string
-  ): Promise<ApiResponse<void>> {
-    return this.request<void>("/job/once", {
-      method: "POST",
-      body: JSON.stringify({ jobId, nodeUuid }),
-    });
-  }
-
-  /**
-   * 终止一个正在运行的任务
-   * @param {number} jobId - 要终止的任务 ID
-   * @param {string} nodeUuid - 任务所在的节点 UUID
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在任务终止命令发送后解析
-   */
-  async killJob(jobId: number, nodeUuid: string): Promise<ApiResponse<void>> {
-    return this.request<void>("/job/kill", {
-      method: "POST",
-      body: JSON.stringify({ jobId, nodeUuid }),
-    });
-  }
-
-  // Node APIs
-  /**
-   * 根据指定条件搜索节点
-   * @param {NodeSearchRequest} data - 节点的搜索条件
-   * @returns {Promise<ApiResponse<PageResult<NodeSearchResult>>>} 返回一个 Promise，该 Promise 解析为节点的分页列表
-   */
-  async searchNodes(
-    data: NodeSearchRequest
-  ): Promise<ApiResponse<PageResult<NodeSearchResult>>> {
-    return this.request<PageResult<NodeSearchResult>>("/node/search", {
+  async executeJobOnce(data: JobOnce): Promise<object> {
+    return this.request<object>("/job/once", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 删除一个节点
-   * @param {string} uuid - 要删除节点的 UUID
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在节点被删除后解析
-   */
-  async deleteNode(uuid: string): Promise<ApiResponse<void>> {
-    return this.request<void>("/node/del", {
+  async killJob(data: JobKill): Promise<object> {
+    return this.request<object>("/job/kill", {
       method: "POST",
-      body: JSON.stringify({ uuid }),
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Node APIs
+  async searchNodes(data: NodeSearch): Promise<PageResult<Node>> {
+    return this.request<PageResult<Node>>("/node/search", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deleteNode(data: Delete): Promise<object> {
+    return this.request<object>("/node/del", {
+      method: "POST",
+      body: JSON.stringify(data),
     });
   }
 
   // Script APIs
-  /**
-   * 根据指定条件搜索脚本
-   * @param {ScriptSearchRequest} data - 脚本的搜索条件
-   * @returns {Promise<ApiResponse<PageResult<Script>>>} 返回一个 Promise，该 Promise 解析为脚本的分页列表
-   */
-  async searchScripts(
-    data: ScriptSearchRequest
-  ): Promise<ApiResponse<PageResult<Script>>> {
+  async searchScripts(data: ScriptSearch): Promise<PageResult<Script>> {
     return this.request<PageResult<Script>>("/script/search", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 根据 ID 查找脚本
-   * @param {number} id - 要查找的脚本 ID
-   * @returns {Promise<ApiResponse<Script>>} 返回一个 Promise，该 Promise 解析为找到的脚本
-   */
-  async findScriptById(id: number): Promise<ApiResponse<Script>> {
-    const params = new URLSearchParams({ id: id.toString() });
-    return this.request<Script>(`/script/find?${params.toString()}`);
+  async findScriptById(data: ScriptFind): Promise<Script> {
+    return this.request<Script>(`/script/find?`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
-  /**
-   * 创建一个新脚本
-   * @param {Script} data - 要创建的脚本的详细信息
-   * @returns {Promise<ApiResponse<Script>>} 返回一个 Promise，该 Promise 解析为新创建的脚本
-   */
-  async createScript(data: Script): Promise<ApiResponse<Script>> {
+  // 传入id则更新指定脚本
+  // 无id则创建新脚本
+  async saveScript(data: ScriptUpdate): Promise<Script> {
     return this.request<Script>("/script/add", {
       method: "POST",
       body: JSON.stringify(data),
     });
   }
 
-  /**
-   * 更新一个现有脚本
-   * @param {Partial<Script>} data - 脚本的更新信息
-   * @returns {Promise<ApiResponse<Script>>} 返回一个 Promise，该 Promise 解析为更新后的脚本
-   */
-  async updateScript(data: Partial<Script>): Promise<ApiResponse<Script>> {
-    return this.request<Script>("/script/add", {
+  async deleteScripts(data: Delete): Promise<object> {
+    return this.request<object>("/script/del", {
       method: "POST",
       body: JSON.stringify(data),
-    });
-  }
-
-  /**
-   * 删除一个或多个脚本
-   * @param {number[]} ids - 要删除的脚本 ID 数组
-   * @returns {Promise<ApiResponse<void>>} 返回一个 Promise，在脚本被删除后解析
-   */
-  async deleteScripts(ids: number[]): Promise<ApiResponse<void>> {
-    return this.request<void>("/script/del", {
-      method: "POST",
-      body: JSON.stringify({ ids }),
     });
   }
 
   // Statistics APIs
-  /**
-   * 获取当日的系统统计数据
-   * @returns {Promise<ApiResponse<SystemStatistics>>} 返回一个 Promise，该 Promise 解析为当日的系统统计数据
-   */
-  async getTodayStatistics(): Promise<ApiResponse<SystemStatistics>> {
-    return this.request<SystemStatistics>("/statis/today");
+  async getTodayStatistics(): Promise<TodayStatistics> {
+    return this.request<TodayStatistics>("/statis/today");
   }
 
-  /**
-   * 获取本周的系统统计数据
-   * @returns {Promise<ApiResponse<WeekStatistics>>} 返回一个 Promise，该 Promise 解析为本周的统计数据
-   */
-  async getWeekStatistics(): Promise<ApiResponse<WeekStatistics>> {
+  async getWeekStatistics(): Promise<WeekStatistics> {
     return this.request<WeekStatistics>("/statis/week");
   }
 
-  /**
-   * 获取系统信息
-   * @param {string} [uuid] - 可选的节点 UUID。如果提供，则获取指定节点的信息；否则获取管理服务器的信息
-   * @returns {Promise<ApiResponse<ServerInfo>>} 返回一个 Promise，该 Promise 解析为服务器信息
-   */
-  async getSystemInfo(uuid?: string): Promise<ApiResponse<ServerInfo>> {
-    let url = "/statis/system";
-    if (uuid) {
-      const params = new URLSearchParams();
-      params.append("uuid", uuid);
-      url += `?${params.toString()}`;
-    }
-    return this.request<ServerInfo>(url);
+  // 传入uuid返回指定节点的系统信息
+  // 无uuid传入则返回当前管理服务器的系统信息
+  async getSystemInfo(data: GetSystem): Promise<SystemInfo> {
+    return this.request<SystemInfo>("/statis/system", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 }
 

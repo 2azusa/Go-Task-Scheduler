@@ -7,7 +7,7 @@
 *.dll
 *.so
 *.dylib
-
+*.json
 # Test binary, built with `go test -c`
 *.test
 
@@ -65,3 +65,8 @@ admin/docs
 admin/_web
 
 _script
+
+
+admin/conf/
+
+node/conf/

@@ -25,15 +25,19 @@ func (script *ScriptService) Search(s *request.ReqScriptSearch) ([]models.Script
 	if len(s.Name) > 0 {
 		db = db.Where("name like ?", s.Name+"%")
 	}
-	scripts := make([]models.Script, 2)
+
+	// 这是您要用来接收结果的切片
+	scripts := make([]models.Script, 0)
 	var total int64
+
+	// Count 操作是正确的，所以 total 能获取到值
 	err := db.Count(&total).Error
 	if err != nil {
 		return nil, 0, err
 	}
 
-	// 设置分页查询的Limit和Offset，并执行查询
-	err = db.Limit(s.PageSize).Offset((s.Page - 1) * s.PageSize).Find(&script).Error
+	// 修正这里：将查询结果填充到 &scripts 中
+	err = db.Limit(s.PageSize).Offset((s.Page - 1) * s.PageSize).Find(&scripts).Error
 	if err != nil {
 		return nil, 0, err
 	}
@@ -47,11 +51,11 @@ func (s *ScriptService) Update(req *request.ReqScriptUpdate) error {
 		scriptID := *req.ID
 		updates := make(map[string]any)
 
-		if req.Name != nil {
+		if req.Name != nil && *req.Name != "" {
 			updates["name"] = *req.Name
 		}
 
-		if req.Command != nil {
+		if req.Command != nil && *req.Command != "" {
 			updates["command"] = *req.Command
 		}
 

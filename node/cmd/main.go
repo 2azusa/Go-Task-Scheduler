@@ -14,7 +14,18 @@ import (
 const ServerName = "node"
 
 func main() {
+	// =================================================================================
+	// 【关键修正】
+	//
+	// 您的项目设计中，所有命令行参数的解析都由 server.InitNodeServer 函数内部完成。
+	// main 函数的职责就是调用它，不需要、也不应该自己进行任何 flag 解析。
+	// 我们之前所有的手动 flag 解析代码都是不必要的，并且与内部逻辑冲突，因此全部移除。
+	//
+	// InitNodeServer 会自动识别从命令行传入的 -e (Environment) 和 -c (ConfigFileName) 等参数。
+	// =================================================================================
+
 	// 1. 初始化NodeServer组件
+	//    让 InitNodeServer 自己去处理所有命令行参数。
 	if _, err := server.InitNodeServer(ServerName); err != nil {
 		fmt.Println("init node server error:", err.Error())
 		os.Exit(1)
@@ -36,7 +47,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	// 5. 运行节点服务器的核心逻辑，包括 cron 调度程序和 Etcd 观察器
+	// 5. 运行节点服务器的核心逻辑
 	if err = nodeServer.Run(); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("node run error: %s", err.Error()))
 		os.Exit(1)
@@ -48,9 +59,9 @@ func main() {
 	logger.GetLogger().Info(fmt.Sprintf("pulse node %s service started, Ctrl+C or send kill sign to exit", nodeServer.String()))
 
 	// 7. 设置正常关机
-	event.OnEvent(event.EXIT, nodeServer.Stop) // Call nodeServer.Stop on EXIT event.
-	event.WaitEvent()                          // Block until a termination signal is received.
-	event.EmitEvent(event.EXIT, nil)           // Trigger the EXIT event.
+	event.OnEvent(event.EXIT, nodeServer.Stop) // 注册 EXIT 事件的回调函数
+	event.WaitEvent()                          // 阻塞并等待终止信号
+	event.EmitEvent(event.EXIT, nil)           // 触发 EXIT 事件
 
 	logger.GetLogger().Info("exit success")
 }

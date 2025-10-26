@@ -13,7 +13,8 @@ import (
 func RegisterRouters(r *gin.Engine) {
 	r.Use(middlerware.Cors())                                            // 使用Cors中间件来允许跨域请求
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // 添加swagger路由
-	configRoute(r)                                                       // 注册所有的API相关路由
+	apiGroup := r.Group("/api")
+	configRoute(apiGroup)                                                // 注册所有的API相关路由
 	configNoRoute(r)                                                     // 配置静态文件服务，用于前端页面
 }
 
@@ -29,7 +30,7 @@ type Hello struct {
 	Name string `json:"name" form:"name"`
 }
 
-func configRoute(r *gin.Engine) {
+func configRoute(r *gin.RouterGroup) {
 	// 创建一个 /ping 路由组，用于健康检查
 	hello := r.Group("/ping")
 	{
@@ -69,7 +70,7 @@ func configRoute(r *gin.Engine) {
 	{
 		stat.GET("today", defaultStatRouter.GetTodayStatistics) // 获取今日统计数据
 		stat.GET("week", defaultStatRouter.GetWeekStatistics)   // 获取本周统计数据
-		stat.GET("system", defaultStatRouter.GetSystemInfo)     // 获取系统信息
+		stat.POST("system", defaultStatRouter.GetSystemInfo)    // 获取系统信息
 	}
 
 	job := r.Group("/job")
@@ -77,7 +78,7 @@ func configRoute(r *gin.Engine) {
 	{
 		job.POST("add", defaultJobRouter.CreateOrUpdate) // 添加或更新任务
 		job.POST("del", defaultJobRouter.Delete)         // 删除任务
-		job.GET("find", defaultJobRouter.FindById)       // 根据ID查找任务
+		job.POST("find", defaultJobRouter.FindById)      // 根据ID查找任务
 		job.POST("search", defaultJobRouter.Search)      // 搜索任务列表
 		job.POST("log", defaultJobRouter.SearchLog)      // 搜索任务日志
 		job.POST("once", defaultJobRouter.Once)          // 立即执行一个任务
@@ -90,7 +91,7 @@ func configRoute(r *gin.Engine) {
 		user.POST("del", defaultUserRouter.Delete)               // 删除用户
 		user.POST("update", defaultUserRouter.Update)            // 更新用户信息
 		user.POST("change_pw", defaultUserRouter.ChangePassword) // 修改密码
-		user.GET("find", defaultUserRouter.FindById)             // 根据ID查找用户
+		user.POST("find", defaultUserRouter.FindById)            // 根据ID查找用户
 		user.POST("search", defaultUserRouter.Search)            // 搜索用户列表
 	}
 
@@ -106,7 +107,7 @@ func configRoute(r *gin.Engine) {
 	{
 		script.POST("add", defaultScriptRouter.CreateOrUpdate) // 添加或更新脚本
 		script.POST("del", defaultScriptRouter.Delete)         // 删除脚本
-		script.GET("find", defaultScriptRouter.FindById)       // 根据ID查找脚本
+		script.POST("find", defaultScriptRouter.FindById)      // 根据ID查找脚本
 		script.POST("search", defaultScriptRouter.Search)      // 搜索脚本列表
 	}
 }

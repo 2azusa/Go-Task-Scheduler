@@ -60,11 +60,6 @@ func (s *ScriptRouter) CreateOrUpdate(c *gin.Context) {
 		return
 	}
 
-	if req.ID == nil {
-		// 新建
-	} else {
-		// 跟新
-	}
 	err := service.DefaultScriptService.Update(&req)
 	if err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("[create_script] insert script into db error: %s", err.Error()))

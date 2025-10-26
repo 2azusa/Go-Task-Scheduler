@@ -12,7 +12,7 @@ type (
 		Name   string         `json:"name" form:"name"`
 		RunOn  string         `json:"runOn" form:"runOn"`
 		Type   models.JobType `json:"jobType" form:"type"`
-		Status int            `json:"status" form:"status"`
+		Status *int           `json:"status" form:"status"`
 	}
 	ReqJobLogSearch struct {
 		PageInfo

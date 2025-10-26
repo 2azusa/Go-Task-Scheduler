@@ -40,10 +40,14 @@ func (j *JobService) Search(s *request.ReqJobSearch) ([]models.Job, int64, error
 	if s.Type > 0 {
 		db.Where("type = ?", s.Type)
 	}
+
+	//
 	// 如果请求中包含状态，则添加状态的查询条件
-	if s.Status > 0 {
-		db.Where("status = ?", s.Status)
+	if s.Status != nil {
+		db.Where("status = ?", *s.Status)
 	}
+	//
+
 	// 创建一个用于存储的任务切片
 	jobs := make([]models.Job, 2)
 	var total int64

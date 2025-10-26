@@ -69,6 +69,56 @@ func (us *UserService) ChangePassword(userId int, oldPassword, newPassword strin
 	return dbclient.GetMysqlDB().Table(models.PulseUserTableName).Where("id = ?", userId).Update("password", string(hashedPassword)).Error
 }
 
+// func (us *UserService) UpdateUser(userId int, req *request.ReqUserUpdate) error {
+// 	// 使用事务保证“检查唯一性”和“更新”的原子性
+// 	return dbclient.GetMysqlDB().Transaction(func(tx *gorm.DB) error {
+// 		var user models.User
+// 		// 1. 查询现有用户数据
+// 		if err := tx.Table(models.PulseUserTableName).Where("id = ?", userId).First(&user).Error; err != nil {
+// 			if errors.Is(err, gorm.ErrRecordNotFound) {
+// 				return errors.New("user not found")
+// 			}
+// 			return err
+// 		}
+
+// 		updates := make(map[string]any)
+
+// 		// 2. 根据请求构建 updates map
+// 		if req.UserName != nil && *req.UserName != user.UserName {
+// 			// 检查新用户名是否已被其他用户占用
+// 			var count int64
+// 			err := tx.Model(&models.User{}).Where("username = ? AND id != ?", req.UserName, userId).Count(&count).Error
+// 			if err != nil {
+// 				return fmt.Errorf("failed to check username uniqueness: %w", err)
+// 			}
+// 			if count > 0 {
+// 				return errors.New("username already exists")
+// 			}
+// 			updates["username"] = req.UserName
+// 		}
+
+// 		if req.Email != nil {
+// 			updates["email"] = req.Email
+// 		}
+
+// 		if req.Role != nil {
+// 			updates["role"] = req.Role
+// 		}
+
+// 		if len(updates) != 0 {
+// 			updates["updated"] = time.Now().Unix()
+
+// 			// 执行更新
+// 			err := tx.Model(&models.User{}).Where("id = ?", userId).Updates(updates).Error
+// 			if err != nil {
+// 				return fmt.Errorf("failed to update user: %w", err)
+// 			}
+// 		}
+
+//			return nil
+//		})
+//	}
+
 func (us *UserService) UpdateUser(userId int, req *request.ReqUserUpdate) error {
 	// 使用事务保证“检查唯一性”和“更新”的原子性
 	return dbclient.GetMysqlDB().Transaction(func(tx *gorm.DB) error {
@@ -76,7 +126,7 @@ func (us *UserService) UpdateUser(userId int, req *request.ReqUserUpdate) error 
 		// 1. 查询现有用户数据
 		if err := tx.Table(models.PulseUserTableName).Where("id = ?", userId).First(&user).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				return errors.New("user not found")
+				return errors.New("用户不存在")
 			}
 			return err
 		}
@@ -84,25 +134,31 @@ func (us *UserService) UpdateUser(userId int, req *request.ReqUserUpdate) error 
 		updates := make(map[string]any)
 
 		// 2. 根据请求构建 updates map
-		if req.UserName != nil && *req.UserName != user.UserName {
-			// 检查新用户名是否已被其他用户占用
-			var count int64
-			err := tx.Model(&models.User{}).Where("username = ? AND id != ?", req.UserName, userId).Count(&count).Error
-			if err != nil {
-				return fmt.Errorf("failed to check username uniqueness: %w", err)
+		// ！！！dto层传入指针
+		if req.UserName != nil && *req.UserName != user.UserName { // 无传入值，空值为空字符串
+			if *req.UserName != "" { // 无传入值，值为空字符串
+				// 检查新用户名是否已被其他用户占用
+				var count int64
+				err := tx.Model(&models.User{}).Where("username = ? AND id != ?", *req.UserName, userId).Count(&count).Error
+				if err != nil {
+					return fmt.Errorf("检查用户名唯一性失败: %w", err)
+				}
+				if count > 0 {
+					return errors.New("用户名已存在")
+				}
+				updates["username"] = *req.UserName // 在这里解引用指针
 			}
-			if count > 0 {
-				return errors.New("username already exists")
-			}
-			updates["username"] = req.UserName
 		}
 
 		if req.Email != nil {
-			updates["email"] = req.Email
+			// 增加一个检查，防止更新为空字符串
+			if *req.Email != "" {
+				updates["email"] = *req.Email // 在这里解引用指针
+			}
 		}
 
 		if req.Role != nil {
-			updates["role"] = req.Role
+			updates["role"] = *req.Role // 在这里解引用指针
 		}
 
 		if len(updates) != 0 {
@@ -111,7 +167,7 @@ func (us *UserService) UpdateUser(userId int, req *request.ReqUserUpdate) error 
 			// 执行更新
 			err := tx.Model(&models.User{}).Where("id = ?", userId).Updates(updates).Error
 			if err != nil {
-				return fmt.Errorf("failed to update user: %w", err)
+				return fmt.Errorf("更新用户失败: %w", err)
 			}
 		}
 

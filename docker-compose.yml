@@ -1,0 +1,92 @@
+version: '3.8'
+
+services:
+  etcd:
+    # ... etcd 配置保持不变
+    image: 'bitnami/etcd:latest'
+    environment:
+      - ALLOW_NONE_AUTHENTICATION=yes
+      - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379
+    ports:
+      - "2379:2379"
+    networks:
+      - pulse-net
+
+  mariadb:
+    # ... mariadb 配置保持不变
+    image: 'mariadb:10.6'
+    environment:
+      - MARIADB_ROOT_PASSWORD=mysecretpassword
+      - MARIADB_USER=pulse_user
+      - MARIADB_PASSWORD=123456
+      - MARIADB_DATABASE=pulse
+    ports:
+      - "3306:3306"
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks:
+      - pulse-net
+
+  # --- 工作节点 (路径已更新为 docker_conf) ---
+
+  node1:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    volumes:
+      # 【路径更新】: 从新的 _mock_node/docker_conf 目录挂载
+      - ./_mock_node/docker_conf/node1.json:/app/node/conf/testing/node1.json
+    command: ["--environment=testing", "--configfilename=node1"]
+    networks:
+      - pulse-net
+    depends_on:
+      - etcd
+      - mariadb
+
+  node2:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    volumes:
+      # 【路径更新】
+      - ./_mock_node/docker_conf/node2.json:/app/node/conf/testing/node2.json
+    command: ["--environment=testing", "--configfilename=node2"]
+    networks:
+      - pulse-net
+    depends_on:
+      - etcd
+      - mariadb
+      
+  node3:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    volumes:
+      # 【路径更新】
+      - ./_mock_node/docker_conf/node3.json:/app/node/conf/testing/node3.json
+    command: ["--environment=testing", "--configfilename=node3"]
+    networks:
+      - pulse-net
+    depends_on:
+      - etcd
+      - mariadb
+
+  node4:
+    build:
+      context: .
+      dockerfile: node.Dockerfile
+    volumes:
+      - ./_mock_node/docker_conf/node4.json:/app/node/conf/testing/node4.json
+    command: ["--environment=testing", "--configfilename=node4"]
+    networks:
+      - pulse-net
+    depends_on:
+      - etcd
+      - mariadb
+
+networks:
+  pulse-net:
+    driver: bridge
+
+volumes:
+  mariadb_data:
