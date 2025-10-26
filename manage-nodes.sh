@@ -1,23 +1,17 @@
 #!/bin/bash
-# manage-nodes.sh - (已更新为最终目录结构)
+# manage-nodes.sh - 用于在开发环境模拟 pulsenode 服务。
 
-# --- 配置 ---
 BIN_DIR="./bin"
 PROG_NAME="pulsenode"
 
-# 【路径更新】: 指向新的本地配置文件和运行时目录
 MOCK_CONF_DIR="./_mock_node/conf"
 TARGET_CONF_DIR="./bin/node/conf/testing"
 ENVIRONMENT="testing"
 RUNTIME_DIR="./_mock_node/runtime"
 LOGS_DIR="$RUNTIME_DIR/logs"
 PID_DIR="$RUNTIME_DIR/pids"
-# --- 配置结束 ---
 
-# start, stop, status 函数内容完全不需要修改，因为它们使用的是上面的变量
-# ... (函数内容保持不变) ...
 
-# 确保所有需要的目录都存在
 mkdir -p "$LOGS_DIR"
 mkdir -p "$PID_DIR"
 mkdir -p "$TARGET_CONF_DIR"

@@ -14,8 +14,8 @@ func RegisterRouters(r *gin.Engine) {
 	r.Use(middlerware.Cors())                                            // 使用Cors中间件来允许跨域请求
 	r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler)) // 添加swagger路由
 	apiGroup := r.Group("/api")
-	configRoute(apiGroup)                                                // 注册所有的API相关路由
-	configNoRoute(r)                                                     // 配置静态文件服务，用于前端页面
+	configRoute(apiGroup) // 注册所有的API相关路由
+	configNoRoute(r)      // 配置静态文件服务，用于前端页面
 }
 
 func configNoRoute(r *gin.Engine) {
@@ -34,21 +34,11 @@ func configRoute(r *gin.RouterGroup) {
 	// 创建一个 /ping 路由组，用于健康检查
 	hello := r.Group("/ping")
 	{
-		// @Summary 心跳检测
-		// @Tags health
-		// @Produce  json
-		// @Success 200 {string} string "pong"
-		// @Router /ping [get]
+		// 心跳检测
 		hello.GET("", func(c *gin.Context) {
 			c.JSON(200, "pong")
 		})
-		// @Summary 带名称的心跳检测
-		// @Tags health
-		// @Accept  json
-		// @Produce  json
-		// @Param   body  body   Hello  true  "Name to greet"
-		// @Success 200 {string} string "hello,{name}"
-		// @Router /ping [post]
+		// 带名称的心跳检测
 		hello.POST("", func(c *gin.Context) {
 			var h Hello
 			err := c.ShouldBindJSON(&h)

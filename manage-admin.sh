@@ -1,12 +1,10 @@
 #!/bin/bash
 # manage-admin.sh - 用于在开发环境管理 pulseadmin 服务。
 
-# --- 配置 ---
 BIN_DIR="./bin"
 PROG_NAME="pulseadmin"
 LOGS_DIR="./bin/admin/logs"
 PID_FILE="./bin/admin/admin.pid"
-# --- 配置结束 ---
 
 mkdir -p "$LOGS_DIR"
 
@@ -16,7 +14,6 @@ start() {
     echo "服务已经在运行 (PID: $(cat "$PID_FILE"))."
     return
   fi
-  # 注意: 如果你的 admin 程序需要配置文件，请在这里加上 -c 参数
   nohup "$BIN_DIR/$PROG_NAME" > "$LOGS_DIR/run.log" 2>&1 &
   local pid=$!
   echo $pid > "$PID_FILE"

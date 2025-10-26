@@ -98,7 +98,7 @@ func InitNodeServer(serverName string, inits ...func()) (*models.Config, error) 
 	})
 	// 初始化数据库
 	dsn := mysqlConfig.EmptyDsn()
-	createSql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAUlt CHARCHTER SET utf8mb4;", mysqlConfig.Dbname)
+	createSql := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` DEFAUlt CHARACTER SET utf8mb4;", mysqlConfig.Dbname)
 	if err := dbclient.CreateDatabase(dsn, "mysql", createSql); err != nil {
 		logger.GetLogger().Error(fmt.Sprintf("create mysql database failed, error: %s", err.Error()))
 	}
