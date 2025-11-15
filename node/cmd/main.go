@@ -14,16 +14,6 @@ import (
 const ServerName = "node"
 
 func main() {
-	// =================================================================================
-	// 【关键修正】
-	//
-	// 您的项目设计中，所有命令行参数的解析都由 server.InitNodeServer 函数内部完成。
-	// main 函数的职责就是调用它，不需要、也不应该自己进行任何 flag 解析。
-	// 我们之前所有的手动 flag 解析代码都是不必要的，并且与内部逻辑冲突，因此全部移除。
-	//
-	// InitNodeServer 会自动识别从命令行传入的 -e (Environment) 和 -c (ConfigFileName) 等参数。
-	// =================================================================================
-
 	// 1. 初始化NodeServer组件
 	//    让 InitNodeServer 自己去处理所有命令行参数。
 	if _, err := server.InitNodeServer(ServerName); err != nil {

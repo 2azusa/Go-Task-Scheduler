@@ -172,7 +172,6 @@ func (j *JobRouter) Delete(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /job/find [get]
 func (j *JobRouter) FindById(c *gin.Context) {
-	// // --- 开始调试 ---
 	// // 1. 读取请求体
 	// bodyBytes, err := io.ReadAll(c.Request.Body)
 	// if err != nil {
@@ -189,7 +188,6 @@ func (j *JobRouter) FindById(c *gin.Context) {
 	// logger.GetLogger().Info(fmt.Sprintf("Content-Type Header: %s", c.GetHeader("Content-Type")))
 	// logger.GetLogger().Info(fmt.Sprintf("Raw Request Body: %s", string(bodyBytes)))
 	// logger.GetLogger().Info("===================================================")
-	// // --- 结束调试 ---
 
 	var req request.ByID
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -229,7 +227,6 @@ func (j *JobRouter) FindById(c *gin.Context) {
 // @Failure 500 {object} resp.Response "Internal server error"
 // @Router /job/search [post]
 func (j *JobRouter) Search(c *gin.Context) {
-	// // --- 开始调试 ---
 	// bodyBytes, err := io.ReadAll(c.Request.Body)
 	// if err != nil {
 	// 	logger.GetLogger().Error(fmt.Sprintf("[search_job] failed to read request body: %s", err.Error()))
@@ -243,7 +240,6 @@ func (j *JobRouter) Search(c *gin.Context) {
 	// logger.GetLogger().Info(fmt.Sprintf("Content-Type Header: %s", c.GetHeader("Content-Type")))
 	// logger.GetLogger().Info(fmt.Sprintf("Raw Request Body: %s", string(bodyBytes)))
 	// logger.GetLogger().Info("==========================================================")
-	// // --- 结束调试 ---
 
 	var req request.ReqJobSearch
 	if err := c.ShouldBindJSON(&req); err != nil {

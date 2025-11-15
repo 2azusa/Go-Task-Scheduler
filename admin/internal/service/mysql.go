@@ -28,7 +28,7 @@ func RegisterTables(db *gorm.DB) error {
 	}
 	// 定义一个 User 类型的切片，用于初始化种子数据
 	entities := []models.User{
-		{UserName: "root", Password: "7szho", Role: models.RoleAdmin, Email: "123321@qq.com"},
+		{UserName: "root", Password: "123456", Role: models.RoleAdmin, Email: "123321@qq.com"},
 	}
 	// 调用 checkDataExist 函数检查数据是否存在，避免重复插入
 	if exist := checkDataExist(db); !exist {

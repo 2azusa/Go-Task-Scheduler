@@ -80,7 +80,6 @@ func JwtToken() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenHeader := c.Request.Header.Get("Authorization")
 		if tokenHeader == "" {
-			// c.JSON(http.StatusUnauthorized, gin.H{"error": "请求未携带token"})
 			resp.FailWithDetailed(resp.ERROR, gin.H{"reload": true}, "请求未携带token", c)
 			c.Abort()
 			return

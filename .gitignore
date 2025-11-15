@@ -72,3 +72,9 @@ admin/conf/
 node/conf/
 
 _mock_node
+
+.zed
+
+admin/web/.vite/*
+
+common/docs

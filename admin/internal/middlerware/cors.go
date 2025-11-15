@@ -21,7 +21,7 @@ func Cors() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, DELETE, PUT")
 		// 设置”Access-Control-Expose-Header“响应头，指定哪些响应头可以作为响应的一部分暴露给客户端
 		c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers, Content-Type")
-		// 设置”Access-Control-Allow-Credentials“响应头，白哦是是否可以将响应暴露给页面
+		// 设置”Access-Control-Allow-Credentials“响应头，指定是否可以将响应暴露给页面
 		c.Header("Access-Control-Allow-Credentials", "true")
 
 		// 如果请求方法是预检请求，则中止请求
